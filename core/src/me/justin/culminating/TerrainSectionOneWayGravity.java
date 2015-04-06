@@ -11,10 +11,6 @@ import com.badlogic.gdx.physics.box2d.World;
  */
 public class TerrainSectionOneWayGravity extends TerrainSectionPolygon {
 
-    public TerrainSectionOneWayGravity(World world, float x, float y, float hw, float hh, float mass) {
-        super(world, x, y, hw, hh, mass);
-    }
-
     public TerrainSectionOneWayGravity(World world, float x, float y, Vector2[] vertices, float mass) {
         super(world, x, y, vertices, mass);
     }
