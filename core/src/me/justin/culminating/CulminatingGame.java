@@ -35,25 +35,38 @@ public class CulminatingGame extends ApplicationAdapter {
         camera.zoom = 1f/10;
         player = new Player(this);
 
-//        addRectangle(world, -100,0,10,5,100);
-//        addRectangle(world, 30,0,5,15,100);
-//
-//        addPlanet(world, -60, 0, 3, 1);
-//        addPlanet(world, -80, 0, 3, 100);
-//        addPlanet(world, -30, 0, 30, 100);
-//        addPlanet(world, 20, 5, 10, 100);
-
-        Vector2[] points = new Vector2[] {
+        TerrainSection[] path = TerrainUtils.generatePath(world, new Vector2[] {
                 new Vector2(0,0),
                 new Vector2(10,0),
                 new Vector2(20,10),
-                new Vector2(30, 40),
-                new Vector2(20, 50),
-                new Vector2(0, 60),
-        };
-
-        TerrainSection[] path = TerrainUtils.generatePath(world, points, 1, 0, 0, 100);
+                new Vector2(20, 40),
+                new Vector2(10, 50),
+                new Vector2(0, 50),
+                new Vector2(0, 55),
+                new Vector2(15, 55),
+                new Vector2(25, 40),
+                new Vector2(25, 10),
+                new Vector2(10, -5),
+                new Vector2(0, -5),
+                new Vector2(0, 0),
+        }, 1, 30, 0, 10);
         for (TerrainSection t : path) terrain.add(t);
+
+        terrain.add(new TerrainSectionOneWayGravity(world, 5, 0, new Vector2[] {
+                new Vector2(0,0),new Vector2(10,0),new Vector2(5,-5),
+        }, 100));
+
+        addPlanet(world, -15,0,10, 100);
+        addPlanet(world, -30,15,5, 100);
+        addRectangle(world, -25,30,5,2, 100);
+
+        terrain.add(new TerrainSectionOneWayGravity(world, -15, 30, new Vector2[] {
+                new Vector2(0,0),new Vector2(10,0),new Vector2(5,-5),
+        }, 100));
+
+        terrain.add(new TerrainSectionOneWayGravity(world, 5, 30, new Vector2[] {
+                new Vector2(0,0),new Vector2(10,0),new Vector2(5,-5),
+        }, 100));
 
         world.setContactListener(new ContactListener() {
             @Override

@@ -13,7 +13,7 @@ import com.badlogic.gdx.physics.box2d.World;
  */
 public class TerrainSectionPolygon extends TerrainSection {
 
-    private PolygonShape shape;
+    protected PolygonShape shape;
 
     public TerrainSectionPolygon(World world, float x, float y, float hw, float hh, float mass) {
         this(world, x, y, new Vector2[]{new Vector2(-hw, -hh),new Vector2(-hw, hh),
@@ -40,7 +40,7 @@ public class TerrainSectionPolygon extends TerrainSection {
         body.setUserData(this);
     }
 
-    private Vector2[] getVertices() {
+    protected Vector2[] getVertices() {
         Vector2[] vertices = new Vector2[shape.getVertexCount()];
         Vector2 vertex = new Vector2();
         for (int i=0; i<vertices.length; i++) {
@@ -54,7 +54,7 @@ public class TerrainSectionPolygon extends TerrainSection {
     //We know the closest point is either a vertex, or an altitude from /from/ to an edge
     //This solution is a bit naive, as it checks every single possible point, but it is still
     //linear, so it should be good enough (tm)
-    private Vector2 getClosestSurfacePoint(Vector2 from) {
+    protected Vector2 getClosestSurfacePoint(Vector2 from) {
 
         Vector2[] vertices = getVertices();
         Vector2 closestPoint = vertices[0];
