@@ -18,7 +18,7 @@ public class Player {
     private Body body;
     private CulminatingGame game;
 
-    public Vector2 position = new Vector2(0,40);
+    public Vector2 position = new Vector2(0,0);
 
     //Maintain a list of all collisions with the floor so we know when they can jump
     private ArrayList<Fixture> floorCollisions = new ArrayList<Fixture>();
@@ -52,9 +52,7 @@ public class Player {
             body.createFixture(def);
         }
 
-
         body.setUserData(this);
-
     }
 
     public void update() {

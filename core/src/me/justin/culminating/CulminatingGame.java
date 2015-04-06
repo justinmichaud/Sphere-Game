@@ -35,13 +35,25 @@ public class CulminatingGame extends ApplicationAdapter {
         camera.zoom = 1f/10;
         player = new Player(this);
 
-        addRectangle(world, -100,0,10,5,100);
-        addRectangle(world, 30,0,5,15,100);
+//        addRectangle(world, -100,0,10,5,100);
+//        addRectangle(world, 30,0,5,15,100);
+//
+//        addPlanet(world, -60, 0, 3, 1);
+//        addPlanet(world, -80, 0, 3, 100);
+//        addPlanet(world, -30, 0, 30, 100);
+//        addPlanet(world, 20, 5, 10, 100);
 
-        addPlanet(world, -60, 0, 3, 1);
-        addPlanet(world, -80, 0, 3, 100);
-        addPlanet(world, -30, 0, 30, 100);
-        addPlanet(world, 20, 5, 10, 100);
+        Vector2[] points = new Vector2[] {
+                new Vector2(0,0),
+                new Vector2(10,0),
+                new Vector2(20,10),
+                new Vector2(30, 40),
+                new Vector2(20, 50),
+                new Vector2(0, 60),
+        };
+
+        TerrainSection[] path = TerrainUtils.generatePath(world, points, 1, 0, 0, 100);
+        for (TerrainSection t : path) terrain.add(t);
 
         world.setContactListener(new ContactListener() {
             @Override
