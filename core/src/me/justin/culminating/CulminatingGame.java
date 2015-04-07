@@ -52,21 +52,14 @@ public class CulminatingGame extends ApplicationAdapter {
         }, 1, 30, 0, 10);
         for (TerrainSection t : path) terrain.add(t);
 
-        terrain.add(new TerrainSectionOneWayGravity(world, 5, 0, new Vector2[] {
-                new Vector2(0,0),new Vector2(10,0),new Vector2(5,-5),
-        }, 100));
+        addOneWayPlatform(world, 5, 0);
 
         addPlanet(world, -15,0,10, 100);
         addPlanet(world, -30,15,5, 100);
         addRectangle(world, -25,30,5,2, 100);
 
-        terrain.add(new TerrainSectionOneWayGravity(world, -15, 30, new Vector2[] {
-                new Vector2(0,0),new Vector2(10,0),new Vector2(5,-5),
-        }, 100));
-
-        terrain.add(new TerrainSectionOneWayGravity(world, 5, 30, new Vector2[] {
-                new Vector2(0,0),new Vector2(10,0),new Vector2(5,-5),
-        }, 100));
+        addOneWayPlatform(world, -15, 30);
+        addOneWayPlatform(world, 5, 30);
 
         world.setContactListener(new ContactListener() {
             @Override
@@ -97,6 +90,12 @@ public class CulminatingGame extends ApplicationAdapter {
 
     private void addRectangle(World world, int x, int y, float width, float height, float mass) {
         terrain.add(new TerrainSectionPolygon(world, x, y, width, height, mass));
+    }
+
+    private void addOneWayPlatform(World world, int x, int y) {
+        terrain.add(new TerrainSectionOneWayGravity(world, x, y, new Vector2[] {
+                new Vector2(0,0),new Vector2(10,0),new Vector2(5,-5),
+        }, new Vector2(5,0), 100));
     }
 
 	@Override

@@ -18,7 +18,7 @@ public class Player {
     private Body body;
     private CulminatingGame game;
 
-    public Vector2 position = new Vector2(0,80);
+    public Vector2 position = new Vector2(20,60);
 
     //Maintain a list of all collisions with the floor so we know when they can jump
     private ArrayList<Fixture> floorCollisions = new ArrayList<Fixture>();

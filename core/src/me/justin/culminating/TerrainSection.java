@@ -12,7 +12,7 @@ public abstract class TerrainSection {
     public Vector2 position;
     public float mass = 1;
     protected World world;
-    protected Body body;
+    public Body body;
 
     public TerrainSection(World world, float x, float y, float mass) {
         this.world = world;
