@@ -1,10 +1,12 @@
 package me.justin.culminating;
 
 import com.badlogic.gdx.ApplicationAdapter;
+import com.badlogic.gdx.Files;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
@@ -14,7 +16,10 @@ import com.badlogic.gdx.physics.box2d.ContactListener;
 import com.badlogic.gdx.physics.box2d.Manifold;
 import com.badlogic.gdx.physics.box2d.World;
 
+import java.io.IOException;
 import java.util.ArrayList;
+
+import javax.imageio.ImageIO;
 
 public class CulminatingGame extends ApplicationAdapter {
 
@@ -32,34 +37,41 @@ public class CulminatingGame extends ApplicationAdapter {
         b2Renderer = new Box2DDebugRenderer(true, false, false, false, false, false);
         renderer = new ShapeRenderer();
         camera = new OrthographicCamera(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-        camera.zoom = 1f/10;
+        camera.zoom = 1f/60;
         player = new Player(this);
 
-        TerrainSection[] path = TerrainUtils.generatePath(world, new Vector2[] {
-                new Vector2(0,0),
-                new Vector2(10,0),
-                new Vector2(20,10),
-                new Vector2(20, 40),
-                new Vector2(10, 50),
-                new Vector2(0, 50),
-                new Vector2(0, 55),
-                new Vector2(15, 55),
-                new Vector2(25, 40),
-                new Vector2(25, 10),
-                new Vector2(10, -5),
-                new Vector2(0, -5),
-                new Vector2(0, 0),
-        }, 1, 30, 0, 10);
-        for (TerrainSection t : path) terrain.add(t);
+//        TerrainSection[] path = TerrainUtils.generatePath(world, new Vector2[] {
+//                new Vector2(0,0),
+//                new Vector2(10,0),
+//                new Vector2(20,10),
+//                new Vector2(20, 40),
+//                new Vector2(10, 50),
+//                new Vector2(0, 50),
+//                new Vector2(0, 55),
+//                new Vector2(15, 55),
+//                new Vector2(25, 40),
+//                new Vector2(25, 10),
+//                new Vector2(10, -5),
+//                new Vector2(0, -5),
+//                new Vector2(0, 0),
+//        }, 1, 30, 0, 10);
+//        for (TerrainSection t : path) terrain.add(t);
+//
+//        addOneWayPlatform(world, 5, 0);
+//
+//        addPlanet(world, -15,0,10, 100);
+//        addPlanet(world, -30,15,5, 100);
+//        addRectangle(world, -25,30,5,2, 100);
+//
+//        addOneWayPlatform(world, -15, 30);
+//        addOneWayPlatform(world, 5, 30);
 
-        addOneWayPlatform(world, 5, 0);
-
-        addPlanet(world, -15,0,10, 100);
-        addPlanet(world, -30,15,5, 100);
-        addRectangle(world, -25,30,5,2, 100);
-
-        addOneWayPlatform(world, -15, 30);
-        addOneWayPlatform(world, 5, 30);
+        try {
+            ArrayList<TerrainSection> ts = TerrainUtils.loadFromImage(world, ImageIO.read(Gdx.files.internal("test.png").read()), 100, 100);
+            for (TerrainSection t : ts) terrain.add(t);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         world.setContactListener(new ContactListener() {
             @Override

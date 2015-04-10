@@ -18,12 +18,12 @@ public class Player {
     private Body body;
     private CulminatingGame game;
 
-    public Vector2 position = new Vector2(20,60);
+    public Vector2 position = new Vector2(0,0);
 
     //Maintain a list of all collisions with the floor so we know when they can jump
     private ArrayList<Fixture> floorCollisions = new ArrayList<Fixture>();
     //The current terrain they are sticking to (so they don't get pulled off a planet)
-    private TerrainSection currentTerrain = null;
+    private ArrayList<TerrainSection> currentTerrain = new ArrayList<TerrainSection>();
 
     private static enum PlayerState {
         WALKING, JUMPING, FALLING;
@@ -96,7 +96,7 @@ public class Player {
 
     //Claculate the current influence of gravity on the player
     private Vector2 calculateGravity() {
-        if (currentTerrain == null) {
+        if (currentTerrain.isEmpty()) {
             //If they are in the air, we find he weighted average of the gravitational influences
             Vector2 gravity = new Vector2();
             TerrainSection closest = null;
@@ -111,9 +111,14 @@ public class Player {
             //We want constant gravity everywhere (so they don't get stuck)
             return gravity.nor();
         }
-
-        if (currentTerrain == null) return Vector2.Zero;
-        else return currentTerrain.getGravityDirection(position);
+        else {
+            Vector2 avg = new Vector2();
+            for (TerrainSection t : currentTerrain) {
+                avg.add(t.getGravityDirection(position));
+            }
+            avg.scl(1f/currentTerrain.size());
+            return avg;
+        }
     }
 
     //Handle state changes when walking, falling and jumping
@@ -122,11 +127,11 @@ public class Player {
 
         if (contact.getFixtureA().getBody() == body) {
             floorCollisions.add(contact.getFixtureB());
-            currentTerrain = (TerrainSection) contact.getFixtureB().getBody().getUserData();
+            currentTerrain.add((TerrainSection) contact.getFixtureB().getBody().getUserData());
         }
         else {
             floorCollisions.add(contact.getFixtureA());
-            currentTerrain = (TerrainSection) contact.getFixtureA().getBody().getUserData();
+            currentTerrain.add((TerrainSection) contact.getFixtureA().getBody().getUserData());
         }
     }
 
@@ -134,13 +139,14 @@ public class Player {
 
         if (contact.getFixtureA().getBody() == body) {
             floorCollisions.remove(contact.getFixtureB());
+            currentTerrain.remove((TerrainSection) contact.getFixtureB().getBody().getUserData());
         }
         else {
             floorCollisions.remove(contact.getFixtureA());
+            currentTerrain.remove((TerrainSection) contact.getFixtureA().getBody().getUserData());
         }
 
         if (floorCollisions.isEmpty()) {
-            currentTerrain = null;
             if (state == PlayerState.WALKING) state = PlayerState.FALLING;
         }
     }
