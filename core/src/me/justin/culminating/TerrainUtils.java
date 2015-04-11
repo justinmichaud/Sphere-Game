@@ -133,117 +133,21 @@ public class TerrainUtils {
         return img.getHeight()-y-1;
     }
 
-    private static void discardVertex(CollisionImageGraph g, Vector2 v) {
-
-        if (g.adjacencyList.get(v).size() != 2) return;
-
-        //Connect each neighbour to each other so this vertex is redundant
-        for (CollisionImageGraph.Edge e : g.adj(v)) {
-            Vector2 n = e.other(v);
-
-            for (CollisionImageGraph.Edge e2 : g.adj(v)) {
-                Vector2 n2 = e2.other(v);
-
-                if (!n.equals(n2)) g.add(n, n2, 1);
-            }
-        }
-
-        //Remove all links to this vertex
-        // (under the assumption that there are no unpaired directed edges
-        for (CollisionImageGraph.Edge e : g.adj(v)) {
-            Vector2 vertex = e.other(v);
-            Iterator<CollisionImageGraph.Edge> itr = g.adj(vertex).iterator();
-
-            while (itr.hasNext()) {
-                CollisionImageGraph.Edge next = itr.next();
-                if (next.other(vertex).equals(v)) itr.remove();
-            }
-        }
-
-        g.adjacencyList.remove(v);
-    }
-
-
-    private static float curvature (Vector2 v1, Vector2 v2, Vector2 v3) {
-        Vector2 midPoint = new Vector2((v1.x + v3.x)/2f, (v1.y + v3.y)/2f);
-        return midPoint.dst2(v2);
-    }
-
-    private static void simplifyGraph(CollisionImageGraph g, float smoothness) {
-
-        System.out.println("Graph size before simplification: " + g.adjacencyList.size());
-
-        Stack<Vector2> toVisit = new Stack<Vector2>();
-        Set<Vector2> visited = new HashSet<Vector2>();
-
-        while (true) {
-
-            Vector2 next = null;
-
-            for (Vector2 v : g.vertices()) {
-                if (!visited.contains(v)) {
-                    next = v;
-                    break;
-                }
-            }
-
-            if (next == null) break;
-            toVisit.add(next);
-
-            while (!toVisit.isEmpty()) {
-                Vector2 v = toVisit.pop();
-                visited.add(v);
-
-                //Find all neighbour -> v -> other neighbour sections
-                //If we find none that are sharp, we can remove this edge
-
-                boolean sharp = false;
-
-                for (CollisionImageGraph.Edge e1 : g.adj(v)) {
-                    Vector2 n1 = e1.other(v);
-
-                    for (CollisionImageGraph.Edge e2 : g.adj(v)) {
-                        Vector2 n2 = e2.other(v);
-                        if (n1.equals(n2)) continue;
-
-                        if (curvature(n1, v, n2) > smoothness) {
-                            sharp = true;
-                            break;
-                        }
-                    }
-
-                    if (sharp) break;
-                }
-
-                if (!sharp) discardVertex(g,v);
-                else {
-                    for (CollisionImageGraph.Edge e : g.adj(v)) {
-                        if (!visited.contains(e.other(v)) && !toVisit.contains(e.other(v)))
-                            toVisit.add(e.other(v));
-                    }
-                }
-            }
-        }
-
-        System.out.println("Graph size after simplification: " + g.adjacencyList.size());
-    }
-
-    //I could probably bake this at runtime to help performance
-    public static ArrayList<TerrainSection> loadFromImage(World world, Pixmap img, float scale, float smoothness) {
-        ArrayList<TerrainSection> path = new ArrayList<TerrainSection>();
+    private static ArrayList<ArrayList<Vector2>> getPaths(Pixmap img, float scale) {
+        ArrayList<ArrayList<Vector2>> paths = new ArrayList<ArrayList<Vector2>>();
         CollisionImageGraph graph = buildGraph(img, scale);
 
-        simplifyGraph(graph, smoothness);
+        //TODO replace the building of the graph with an implicit graph that directly checks the image
 
         //Now that we have a graph with edges along the boundary of our shape,
         //we do a dfs to find the connected components and build the geometry
-
+        //The order should be fine because each vertex only has 2 edges (Except for ones near corners, but whatever)
         Stack<Vector2> toVisit = new Stack<Vector2>();
         Set<Vector2> visited = new HashSet<Vector2>();
 
         while (visited.size() < graph.adjacencyList.size()) {
 
-            ArrayList<Vector2> pathVerts = new ArrayList<Vector2>();
+            ArrayList<Vector2> path = new ArrayList<Vector2>();
 
             Vector2 next = null;
 
@@ -260,18 +164,89 @@ public class TerrainUtils {
             while (!toVisit.isEmpty()) {
                 Vector2 v = toVisit.pop();
                 visited.add(v);
-                pathVerts.add(v);
+                path.add(v);
 
                 for (CollisionImageGraph.Edge e : graph.adj(v)) {
                     if (!visited.contains(e.other(v)) && !toVisit.contains(e.other(v))) toVisit.add(e.other(v));
                 }
             }
 
-            pathVerts.add(pathVerts.get(0)); //We assume that they will always be closed paths
+            path.add(path.get(0)); //We assume that they will always be closed paths
 
-            Collections.addAll(path, generatePath(world, pathVerts.toArray(new Vector2[pathVerts.size()]), 0.1f, 0, 0, 100));
+            paths.add(path);
         }
 
-        return path;
+        return paths;
+    }
+
+    private static float dist2PointLine(Vector2 p, Vector2 v, Vector2 w) {
+        // http://stackoverflow.com/questions/849211/shortest-distance-between-a-point-and-a-line-segment
+        // Return minimum distance between line segment vw and point p
+        float l2 = v.dst2(w);
+        if (l2 == 0) return p.dst(v);   // v == w case
+
+        // Consider the line extending the segment, parameterized as v + t (w - v).
+        // We find projection of point p onto the line.
+        // It falls where t = [(p-v) . (w-v)] / |w-v|^2
+        float t = ((p.x - v.x) * (w.x - v.x) + (p.y - v.y) * (w.y - v.y)) / l2;
+        if (t < 0) return p.dst(v);       // Beyond the 'v' end of the segment
+        else if (t > 1) return p.dst(w);  // Beyond the 'w' end of the segment
+
+        Vector2 projection = new Vector2(v.x + t * (w.x - v.x),
+                v.y + t * (w.y - v.y));  // Projection falls on the segment
+        return p.dst(projection);
+    }
+
+    //http://en.wikipedia.org/wiki/Ramer%E2%80%93Douglas%E2%80%93Peucker_algorithm
+    private static ArrayList<Vector2> simplifyLine(ArrayList<Vector2> line, float smoothness) {
+        ArrayList<Vector2> list = new ArrayList<Vector2>();
+        list.add(line.get(0));
+        list.addAll(simplifyLineSection(line, 1, line.size()-2, smoothness));
+        list.add(line.get(line.size()-1));
+        return list;
+    }
+
+    private static ArrayList<Vector2> simplifyLineSection(ArrayList<Vector2> line, int low, int high, float smoothness) {
+
+        ArrayList<Vector2> newPoints = new ArrayList<Vector2>();
+
+        //Find the point in the line segment furthest from the line formed by the endpoints of this section
+        int maxPointIndex = -1;
+        float maxDist = -1;
+
+        for (int i=low+1; i<=high-1; i++) {
+            float dist = dist2PointLine(line.get(i), line.get(low), line.get(high));
+            if (maxPointIndex == -1 || dist > maxDist) {
+                maxDist = dist;
+                maxPointIndex = i;
+            }
+        }
+
+        if (maxDist < smoothness || maxPointIndex == -1) {
+            //We can just use the line formed by the two endpoints
+            newPoints.add(line.get(low));
+            newPoints.add(line.get(high));
+        }
+        else {
+            newPoints.addAll(simplifyLineSection(line, low, maxPointIndex, smoothness));
+            newPoints.remove(newPoints.size()-1); //Prevent a duplicate point from maxPoint
+            newPoints.addAll(simplifyLineSection(line, maxPointIndex, high, smoothness));
+        }
+
+        return newPoints;
+    }
+
+    //I could probably bake this at runtime to help performance
+    public static ArrayList<TerrainSection> loadFromImage(World world, Pixmap img, float scale, float smoothness) {
+        ArrayList<TerrainSection> terrain = new ArrayList<TerrainSection>();
+
+        for (ArrayList<Vector2> path : getPaths(img, scale)) {
+            System.out.println("Line size before simplification: " + path.size());
+            ArrayList<Vector2> simplified = simplifyLine(path, smoothness);
+            System.out.println("Line size after simplification: " + simplified.size());
+            Collections.addAll(terrain, generatePath(world, simplified.toArray(new Vector2[simplified.size()]), 0.1f, 0, 0, 100));
+        }
+
+        return terrain;
     }
 }
