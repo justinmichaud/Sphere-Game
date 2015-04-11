@@ -31,6 +31,9 @@ public class CulminatingGame extends ApplicationAdapter {
     private SpriteBatch spriteRenderer;
     public OrthographicCamera camera;
 
+    private float terrainScale = 0.08f;
+    private String terrainImage = "test3.png";
+
     private Texture collisionBackground;
 
     public ArrayList<TerrainSection> terrain = new ArrayList<TerrainSection>();
@@ -42,10 +45,10 @@ public class CulminatingGame extends ApplicationAdapter {
         shapeRenderer = new ShapeRenderer();
         spriteRenderer = new SpriteBatch();
         camera = new OrthographicCamera(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-        camera.zoom = 1f/30;
+        camera.zoom = 1f/40;
         player = new Player(this);
 
-        collisionBackground = new Texture("test.png");
+        collisionBackground = new Texture(terrainImage);
 
 //        TerrainSection[] path = TerrainUtils.generatePath(world, new Vector2[] {
 //                new Vector2(0,0),
@@ -74,7 +77,7 @@ public class CulminatingGame extends ApplicationAdapter {
 //        addOneWayPlatform(world, 5, 30);
 
         try {
-            ArrayList<TerrainSection> ts = TerrainUtils.loadFromImage(world, ImageIO.read(Gdx.files.internal("test.png").read()), 1);
+            ArrayList<TerrainSection> ts = TerrainUtils.loadFromImage(world, ImageIO.read(Gdx.files.internal(terrainImage).read()), terrainScale);
             for (TerrainSection t : ts) terrain.add(t);
         } catch (IOException e) {
             e.printStackTrace();
@@ -129,7 +132,8 @@ public class CulminatingGame extends ApplicationAdapter {
 
         spriteRenderer.begin();
         spriteRenderer.setProjectionMatrix(camera.combined);
-        spriteRenderer.draw(collisionBackground, 0, 0);
+        spriteRenderer.draw(collisionBackground, 0, 0, collisionBackground.getWidth()*terrainScale,
+                collisionBackground.getHeight()*terrainScale);
         spriteRenderer.end();
 
 		b2Renderer.render(world, camera.combined);

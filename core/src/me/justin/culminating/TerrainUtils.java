@@ -91,7 +91,7 @@ public class TerrainUtils {
             for (int y=0; y<img.getHeight(); y++) {
 
                 if (isBoundary(x,y,img)) {
-                    Vector2 curr = new Vector2((x + 0.5f)*scale, getWorldY((y - 0.5f)*scale, img));
+                    Vector2 curr = new Vector2((x + 0.5f)*scale, getWorldY(y - 0.5f, img)*scale);
 
                     for (int nx = MathUtils.clamp(x-1, 0, img.getWidth()-1); nx<= MathUtils.clamp(x+1, 0, img.getWidth()-1); nx++) {
                         for (int ny = MathUtils.clamp(y-1, 0, img.getHeight()-1); ny<= MathUtils.clamp(y+1, 0, img.getHeight()-1); ny++) {
@@ -99,7 +99,7 @@ public class TerrainUtils {
                             if (nx == x && ny == y) continue;
 
                             if (isBoundary(nx, ny, img)) {
-                                graph.add(curr, new Vector2((nx + 0.5f)*scale, getWorldY((ny - 0.5f)*scale, img)), 1);
+                                graph.add(curr, new Vector2((nx + 0.5f)*scale, getWorldY(ny - 0.5f, img)*scale), 1);
                             }
                         }
                     }
@@ -120,7 +120,7 @@ public class TerrainUtils {
                         || nx == x-1 && ny == y-1 || nx == x+1 && ny == y-1) continue;
                 if (nx == x && ny == y) continue;
 
-                if (img.getRGB(nx,ny) == 0xFFFFFFFF) return true; //white
+                if (img.getRGB(nx,ny) != 0xFF000000) return true; //white
             }
         }
 
