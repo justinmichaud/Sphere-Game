@@ -64,10 +64,12 @@ public class TerrainUtils {
             //Ensure that there are no duplicate edges
             if (a.equals(b)) return;
             for (Edge e : adj(a)) {
-                if (e.a.equals(a) && e.b.equals(b)) return;
+                if (e.a.equals(a) && e.b.equals(b)
+                        || e.a.equals(b) && e.b.equals(a)) return;
             }
             for (Edge e : adj(b)) {
-                if (e.a.equals(b) && e.b.equals(a)) return;
+                if (e.a.equals(b) && e.b.equals(a)
+                        || e.a.equals(a) && e.b.equals(b)) return;
             }
 
             adjacencyList.get(a).add(new Edge(a,b, weight));
@@ -95,7 +97,6 @@ public class TerrainUtils {
 
                     for (int nx = MathUtils.clamp(x-1, 0, img.getWidth()-1); nx<= MathUtils.clamp(x+1, 0, img.getWidth()-1); nx++) {
                         for (int ny = MathUtils.clamp(y-1, 0, img.getHeight()-1); ny<= MathUtils.clamp(y+1, 0, img.getHeight()-1); ny++) {
-
                             if (nx == x && ny == y) continue;
 
                             if (isBoundary(nx, ny, img)) {
@@ -112,7 +113,7 @@ public class TerrainUtils {
 
     private static boolean isBoundary(int x, int y, Pixmap img) {
 
-        if (img.getPixel(x,y) != 0x000000FF) return false; //Not solid
+        if (img.getPixel(x,y) != 0x000000FF) return false; //Not black
 
         for (int nx = MathUtils.clamp(x-1, 0, img.getWidth()-1); nx<= MathUtils.clamp(x+1, 0, img.getWidth()-1); nx++) {
             for (int ny = MathUtils.clamp(y-1, 0, img.getHeight()-1); ny<= MathUtils.clamp(y+1, 0, img.getHeight()-1); ny++) {
@@ -120,7 +121,7 @@ public class TerrainUtils {
                         || nx == x-1 && ny == y-1 || nx == x+1 && ny == y-1) continue;
                 if (nx == x && ny == y) continue;
 
-                if (img.getPixel(nx, ny) != 0x000000FF) return true; //white
+                if (img.getPixel(nx, ny) != 0x000000FF) return true; //not black
             }
         }
 
@@ -134,8 +135,9 @@ public class TerrainUtils {
 
     private static void discardVertex(CollisionImageGraph g, Vector2 v) {
 
-        //Connect each neighbour to each other neighbour to make this vertex redundant
-        //We assume that there are at most 2 links (left and right) to this vertex
+        if (g.adjacencyList.get(v).size() != 2) return;
+
+        //Connect each neighbour to each other so this vertex is redundant
         for (CollisionImageGraph.Edge e : g.adj(v)) {
             Vector2 n = e.other(v);
 
