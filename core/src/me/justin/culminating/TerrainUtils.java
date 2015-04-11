@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Set;
@@ -41,7 +42,6 @@ public class TerrainUtils {
             Vector2 bottomLeft = topLeft.cpy().sub(normal.cpy().scl(thickness));
 
             path[i] = new TerrainSectionPolygon(world, x, y, new Vector2[] {bottomLeft, bottomRight, topRight, topLeft}, mass);
-            //path[i] = new TerrainSectionSphere(world, topLeft.x, topLeft.y, 0.1f, mass);
         }
 
         return path;
@@ -66,6 +66,7 @@ public class TerrainUtils {
         public HashMap<Vector2, LinkedList<Edge>> adjacencyList = new HashMap<Vector2, LinkedList<Edge>>();
 
         //Use digraph so when it is built, there are no dupes
+        // (as every boundary point is visited, and thus makes a directed edge from it to its boundary neighbours already)
         public void add(Vector2 a, Vector2 b, int weight) {
             if (!adjacencyList.containsKey(a)) adjacencyList.put(a, new LinkedList<Edge>());
 //            if (!adjacencyList.containsKey(b)) adjacencyList.put(b, new LinkedList<Edge>());
@@ -132,10 +133,103 @@ public class TerrainUtils {
         return img.getHeight()-y-1;
     }
 
+    private static void discardVertex(CollisionImageGraph g, Vector2 v) {
+        //Connect each neighbour to each other neighbour to make this vertex redundant
+        for (CollisionImageGraph.Edge e : g.adj(v)) {
+            Vector2 n = e.other(v);
+
+            for (CollisionImageGraph.Edge e2 : g.adj(v)) {
+                Vector2 n2 = e2.other(v);
+
+                if (!n.equals(n2)) g.add(n, n2, 1);
+            }
+        }
+
+        //Remove all links to this vertex
+        // (under the assumption that there are no unpaired directed edges
+        for (CollisionImageGraph.Edge e : g.adj(v)) {
+            Vector2 vertex = e.other(v);
+
+            Iterator<CollisionImageGraph.Edge> itr = g.adj(vertex).iterator();
+
+            while (itr.hasNext()) {
+                CollisionImageGraph.Edge next = itr.next();
+                if (next.other(vertex).equals(v)) itr.remove();
+            }
+        }
+
+        g.adjacencyList.remove(v);
+    }
+
+
+    private static float curvature (Vector2 v1, Vector2 v2, Vector2 v3) {
+        Vector2 midPoint = new Vector2((v1.x + v3.x)/2f, (v1.y + v3.y)/2f);
+        return midPoint.dst2(v2);
+    }
+
+    private static void simplifyGraph(CollisionImageGraph g, float smoothness) {
+
+        System.out.println("Graph size before simplification: " + g.adjacencyList.size());
+
+        Stack<Vector2> toVisit = new Stack<Vector2>();
+        Set<Vector2> visited = new HashSet<Vector2>();
+
+        while (true) {
+
+            Vector2 next = null;
+
+            for (Vector2 v : g.vertices()) {
+                if (!visited.contains(v)) {
+                    next = v;
+                    break;
+                }
+            }
+
+            if (next == null) break;
+            toVisit.add(next);
+
+            while (!toVisit.isEmpty()) {
+                Vector2 v = toVisit.pop();
+                visited.add(v);
+
+                //Find all neighbour -> v -> other neighbour sections
+                //If we find none that are sharp, we can remove this edge
+
+                boolean sharp = false;
+
+                for (CollisionImageGraph.Edge e1 : g.adj(v)) {
+                    Vector2 n1 = e1.other(v);
+
+                    for (CollisionImageGraph.Edge e2 : g.adj(v)) {
+                        Vector2 n2 = e2.other(v);
+                        if (n1.equals(n2)) continue;
+
+                        if (curvature(n1, v, n2) > smoothness) {
+                            sharp = true;
+                            break;
+                        }
+                    }
+
+                    if (sharp) break;
+                }
+
+                if (!sharp) discardVertex(g,v);
+
+                else for (CollisionImageGraph.Edge e : g.adj(v)) {
+                    if (!visited.contains(e.other(v)) && !toVisit.contains(e.other(v))) toVisit.add(e.other(v));
+                }
+            }
+        }
+
+        System.out.println("Graph size after simplification: " + g.adjacencyList.size());
+    }
+
     //I could probably bake this at runtime to help performance
-    public static ArrayList<TerrainSection> loadFromImage(World world, BufferedImage img, float scale) {
+    public static ArrayList<TerrainSection> loadFromImage(World world, BufferedImage img, float scale, float smoothness) {
         ArrayList<TerrainSection> path = new ArrayList<TerrainSection>();
         CollisionImageGraph graph = buildGraph(img, scale);
+
+        simplifyGraph(graph, smoothness);
 
         //Now that we have a graph with edges along the boundary of our shape,
         //we do a dfs to find the connected components and build the geometry
@@ -173,27 +267,6 @@ public class TerrainUtils {
 
             Collections.addAll(path, generatePath(world, pathVerts.toArray(new Vector2[pathVerts.size()]), 0.1f, 0, 0, 100));
         }
-
-//        for (Vector2 v : graph.vertices()) path.add(new TerrainSectionSphere(world, v.x, v.y, 0.1f, 100));
-
-//        for (Vector2 v : graph.vertices()) {
-//            path.add(new TerrainSectionSphere(world, v.x, v.y, 0.1f, 100));
-//
-//            for (CollisionImageGraph.Edge e : graph.adj(v)) {
-//                Vector2 to = e.other(v);
-//
-//                Vector2 topLeft = (v.x < to.x ? v : to);
-//                Vector2 topRight = (v.x < to.x ? to : v);
-//
-//                Vector2 topEdge = topRight.cpy().sub(topLeft).nor();
-//                Vector2 normal = new Vector2(-topEdge.y, topEdge.x).nor();
-//
-//                Vector2 bottomRight = topRight.cpy().sub(normal.cpy().scl(0.1f));
-//                Vector2 bottomLeft = topLeft.cpy().sub(normal.cpy().scl(0.1f));
-//                path.add(new TerrainSectionPolygon(world, 0, 0, new Vector2[] {bottomLeft, bottomRight, topRight, topLeft}, 100));
-//            }
-//
-//        }
 
         return path;
     }

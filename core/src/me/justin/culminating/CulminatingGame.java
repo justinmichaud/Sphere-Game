@@ -3,6 +3,7 @@ package me.justin.culminating;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Files;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
@@ -31,7 +32,7 @@ public class CulminatingGame extends ApplicationAdapter {
     private SpriteBatch spriteRenderer;
     public OrthographicCamera camera;
 
-    private float terrainScale = 0.08f;
+    private float terrainScale = 0.07f;
     private String terrainImage = "test3.png";
 
     private Texture collisionBackground;
@@ -45,7 +46,7 @@ public class CulminatingGame extends ApplicationAdapter {
         shapeRenderer = new ShapeRenderer();
         spriteRenderer = new SpriteBatch();
         camera = new OrthographicCamera(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-        camera.zoom = 1f/40;
+        camera.zoom = 1f/15;
         player = new Player(this);
 
         collisionBackground = new Texture(terrainImage);
@@ -77,7 +78,7 @@ public class CulminatingGame extends ApplicationAdapter {
 //        addOneWayPlatform(world, 5, 30);
 
         try {
-            ArrayList<TerrainSection> ts = TerrainUtils.loadFromImage(world, ImageIO.read(Gdx.files.internal(terrainImage).read()), terrainScale);
+            ArrayList<TerrainSection> ts = TerrainUtils.loadFromImage(world, ImageIO.read(Gdx.files.internal(terrainImage).read()), terrainScale, 0.1f);
             for (TerrainSection t : ts) terrain.add(t);
         } catch (IOException e) {
             e.printStackTrace();
@@ -136,13 +137,14 @@ public class CulminatingGame extends ApplicationAdapter {
                 collisionBackground.getHeight()*terrainScale);
         spriteRenderer.end();
 
-		b2Renderer.render(world, camera.combined);
+		if (Gdx.input.isKeyPressed(Input.Keys.B)) b2Renderer.render(world, camera.combined);
 
-//        renderer.setProjectionMatrix(camera.combined);
-//        renderer.setColor(Color.RED);
-//        renderer.begin(ShapeRenderer.ShapeType.Line);
-//        for (TerrainSection s : terrain) renderer.line(player.position, player.position.cpy().add(s.getGravityDirection(player.position).scl(10)));
-//        for (TerrainSection s : terrain) ((TerrainSectionPolygon)s).dbg(renderer, player.position);
-//        renderer.end();
+        shapeRenderer.setProjectionMatrix(camera.combined);
+        shapeRenderer.setColor(Color.RED);
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+
+        shapeRenderer.circle(player.position.x, player.position.y, 1, 30);
+
+        shapeRenderer.end();
 	}
 }
