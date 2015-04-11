@@ -118,8 +118,8 @@ public class TerrainUtils {
 
         for (int nx = MathUtils.clamp(x-1, 0, img.getWidth()-1); nx<= MathUtils.clamp(x+1, 0, img.getWidth()-1); nx++) {
             for (int ny = MathUtils.clamp(y-1, 0, img.getHeight()-1); ny<= MathUtils.clamp(y+1, 0, img.getHeight()-1); ny++) {
-                //if (nx == x+1 && ny == y+1 || nx == x-1 && ny == y+1
-                //        || nx == x-1 && ny == y-1 || nx == x-1 && ny == y+1) continue;
+                if (nx == x+1 && ny == y+1 || nx == x-1 && ny == y+1
+                        || nx == x-1 && ny == y-1 || nx == x+1 && ny == y-1) continue;
                 if (nx == x && ny == y) continue;
 
                 if (img.getRGB(nx,ny) == 0xFFFFFFFF) return true; //white
@@ -137,54 +137,55 @@ public class TerrainUtils {
         Stack<Vector2> toVisit = new Stack<Vector2>();
         Set<Vector2> visited = new HashSet<Vector2>();
 
-//        while (visited.size() < graph.adjacencyList.size()) {
-//
-//            ArrayList<Vector2> pathVerts = new ArrayList<Vector2>();
-//
-//            Vector2 next = null;
-//
-//            for (Vector2 v : graph.vertices()) {
-//                if (!visited.contains(v)) {
-//                    next = v;
-//                    break;
-//                }
-//            }
-//
-//            assert next != null;
-//            toVisit.add(next);
-//
-//            while (!toVisit.isEmpty()) {
-//                Vector2 v = toVisit.pop();
-//                visited.add(v);
-//                pathVerts.add(v);
-//
-//                for (CollisionImageGraph.Edge e : graph.adj(v)) {
-//                    if (!visited.contains(e.other(v)) && !toVisit.contains(e.other(v))) toVisit.add(e.other(v));
-//                }
-//            }
-//
-//            Collections.addAll(path, generatePath(world, pathVerts.toArray(new Vector2[pathVerts.size()]), 0.1f, 0, 0, 100));
-//        }
-//        for (Vector2 v : graph.vertices()) path.add(new TerrainSectionSphere(world, v.x, v.y, 0.1f, 100));
+        while (visited.size() < graph.adjacencyList.size()) {
 
-        for (Vector2 v : graph.vertices()) {
-            //path.add(new TerrainSectionSphere(world, v.x, v.y, 0.1f, 100));
+            ArrayList<Vector2> pathVerts = new ArrayList<Vector2>();
 
-            for (CollisionImageGraph.Edge e : graph.adj(v)) {
-                Vector2 to = e.other(v);
+            Vector2 next = null;
 
-                Vector2 topLeft = (v.x < to.x ? v : to);
-                Vector2 topRight = (v.x < to.x ? to : v);
-
-                Vector2 topEdge = topRight.cpy().sub(topLeft).nor();
-                Vector2 normal = new Vector2(-topEdge.y, topEdge.x).nor();
-
-                Vector2 bottomRight = topRight.cpy().sub(normal.cpy().scl(0.1f));
-                Vector2 bottomLeft = topLeft.cpy().sub(normal.cpy().scl(0.1f));
-                path.add(new TerrainSectionPolygon(world, 0, 0, new Vector2[] {bottomLeft, bottomRight, topRight, topLeft}, 100));
+            for (Vector2 v : graph.vertices()) {
+                if (!visited.contains(v)) {
+                    next = v;
+                    break;
+                }
             }
 
+            assert next != null;
+            toVisit.add(next);
+
+            while (!toVisit.isEmpty()) {
+                Vector2 v = toVisit.pop();
+                visited.add(v);
+                pathVerts.add(v);
+
+                for (CollisionImageGraph.Edge e : graph.adj(v)) {
+                    if (!visited.contains(e.other(v)) && !toVisit.contains(e.other(v))) toVisit.add(e.other(v));
+                }
+            }
+
+            Collections.addAll(path, generatePath(world, pathVerts.toArray(new Vector2[pathVerts.size()]), 0.1f, 0, 0, 100));
         }
+
+//        for (Vector2 v : graph.vertices()) path.add(new TerrainSectionSphere(world, v.x, v.y, 0.1f, 100));
+
+//        for (Vector2 v : graph.vertices()) {
+//            path.add(new TerrainSectionSphere(world, v.x, v.y, 0.1f, 100));
+//
+//            for (CollisionImageGraph.Edge e : graph.adj(v)) {
+//                Vector2 to = e.other(v);
+//
+//                Vector2 topLeft = (v.x < to.x ? v : to);
+//                Vector2 topRight = (v.x < to.x ? to : v);
+//
+//                Vector2 topEdge = topRight.cpy().sub(topLeft).nor();
+//                Vector2 normal = new Vector2(-topEdge.y, topEdge.x).nor();
+//
+//                Vector2 bottomRight = topRight.cpy().sub(normal.cpy().scl(0.1f));
+//                Vector2 bottomLeft = topLeft.cpy().sub(normal.cpy().scl(0.1f));
+//                path.add(new TerrainSectionPolygon(world, 0, 0, new Vector2[] {bottomLeft, bottomRight, topRight, topLeft}, 100));
+//            }
+//
+//        }
 
         return path;
     }
