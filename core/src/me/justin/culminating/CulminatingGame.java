@@ -32,7 +32,10 @@ public class CulminatingGame extends ApplicationAdapter {
     private SpriteBatch spriteRenderer;
     public OrthographicCamera camera;
 
-    private float terrainScale = 0.07f;
+    private float totalFrameTime = 0;
+    private int frames = 0;
+
+    private float terrainScale = 0.071f;
     private String terrainImage = "test3.png";
 
     private Texture collisionBackground;
@@ -126,15 +129,15 @@ public class CulminatingGame extends ApplicationAdapter {
         world.step(1/60f, 6, 2);
         player.update();
 
-		Gdx.gl.glClearColor(0, 0, 0, 1);
+		Gdx.gl.glClearColor(1, 1, 1, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
         camera.update();
 
         spriteRenderer.begin();
         spriteRenderer.setProjectionMatrix(camera.combined);
-        spriteRenderer.draw(collisionBackground, 0, 0, collisionBackground.getWidth()*terrainScale,
-                collisionBackground.getHeight()*terrainScale);
+        spriteRenderer.draw(collisionBackground, 0, 0, collisionBackground.getWidth() * terrainScale,
+                collisionBackground.getHeight() * terrainScale);
         spriteRenderer.end();
 
 		if (Gdx.input.isKeyPressed(Input.Keys.B)) b2Renderer.render(world, camera.combined);
@@ -146,5 +149,13 @@ public class CulminatingGame extends ApplicationAdapter {
         shapeRenderer.circle(player.position.x, player.position.y, 1, 30);
 
         shapeRenderer.end();
-	}
+
+        frames++;
+        totalFrameTime += Gdx.graphics.getDeltaTime();
+        if (totalFrameTime > 2) {
+            System.out.println("Current time per frame (60fps is 16ms) " + totalFrameTime/frames*1000 + "ms");
+            frames = 0;
+            totalFrameTime = 0;
+        }
+    }
 }

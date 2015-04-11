@@ -4,6 +4,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.CircleShape;
@@ -90,7 +91,7 @@ public class Player {
 
         game.camera.position.set(position.x, position.y, 0);
         //interpolate between the current camera position and the desired one to make movement more smooth
-        game.camera.up.scl(0.9f).add(-gravity.x * 0.1f, -gravity.y * 0.1f, 0).nor();
+        game.camera.up.scl(0.9f).add(new Vector3(-gravity.x, -gravity.y, 0).nor().scl(0.1f)).nor();
         body.setTransform(body.getPosition(), (float)Math.toRadians(gravity.angle() + 180));
     }
 
