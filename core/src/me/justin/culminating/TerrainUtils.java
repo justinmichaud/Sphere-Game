@@ -70,10 +70,8 @@ public class TerrainUtils {
             if (!adjacencyList.containsKey(a)) adjacencyList.put(a, new LinkedList<Edge>());
 //            if (!adjacencyList.containsKey(b)) adjacencyList.put(b, new LinkedList<Edge>());
 
-            Edge e = new Edge(a,b, weight);
-
-            adjacencyList.get(a).add(e);
-//            adjacencyList.get(b).add(e);
+            adjacencyList.get(a).add(new Edge(a,b, weight));
+//            adjacencyList.get(b).add(new Edge(b,a, weight));
         }
 
         public Iterable<Edge> adj(Vector2 v) {
@@ -86,14 +84,14 @@ public class TerrainUtils {
         }
     }
 
-    private static CollisionImageGraph buildGraph(BufferedImage img, float finalWidth, float finalHeight) {
+    private static CollisionImageGraph buildGraph(BufferedImage img, float scale) {
         CollisionImageGraph graph = new CollisionImageGraph();
 
         for (int x=0; x<img.getWidth(); x++) {
             for (int y=0; y<img.getHeight(); y++) {
 
                 if (isBoundary(x,y,img)) {
-                    Vector2 curr = new Vector2(x*finalWidth/img.getWidth(), y*finalHeight/img.getHeight());
+                    Vector2 curr = new Vector2((x + 0.5f)*scale, getWorldY((y - 0.5f)*scale, img));
 
                     for (int nx = MathUtils.clamp(x-1, 0, img.getWidth()-1); nx<= MathUtils.clamp(x+1, 0, img.getWidth()-1); nx++) {
                         for (int ny = MathUtils.clamp(y-1, 0, img.getHeight()-1); ny<= MathUtils.clamp(y+1, 0, img.getHeight()-1); ny++) {
@@ -101,7 +99,7 @@ public class TerrainUtils {
                             if (nx == x && ny == y) continue;
 
                             if (isBoundary(nx, ny, img)) {
-                                graph.add(curr, new Vector2(nx*finalWidth/img.getWidth(), ny*finalHeight/img.getHeight()), 1);
+                                graph.add(curr, new Vector2((nx + 0.5f)*scale, getWorldY((ny - 0.5f)*scale, img)), 1);
                             }
                         }
                     }
@@ -129,10 +127,18 @@ public class TerrainUtils {
         return false;
     }
 
+    //Java's image libraries have origin in top left, libgdx in bottom left
+    private static float getWorldY(float y, BufferedImage img) {
+        return img.getHeight()-y-1;
+    }
+
     //I could probably bake this at runtime to help performance
-    public static ArrayList<TerrainSection> loadFromImage(World world, BufferedImage img, float finalWidth, float finalHeight) {
+    public static ArrayList<TerrainSection> loadFromImage(World world, BufferedImage img, float scale) {
         ArrayList<TerrainSection> path = new ArrayList<TerrainSection>();
-        CollisionImageGraph graph = buildGraph(img, finalWidth, finalHeight);
+        CollisionImageGraph graph = buildGraph(img, scale);
+
+        //Now that we have a graph with edges along the boundary of our shape,
+        //we do a dfs to find the connected components and build the geometry
 
         Stack<Vector2> toVisit = new Stack<Vector2>();
         Set<Vector2> visited = new HashSet<Vector2>();
@@ -162,6 +168,8 @@ public class TerrainUtils {
                     if (!visited.contains(e.other(v)) && !toVisit.contains(e.other(v))) toVisit.add(e.other(v));
                 }
             }
+
+            pathVerts.add(pathVerts.get(0)); //We assume that they will always be closed paths
 
             Collections.addAll(path, generatePath(world, pathVerts.toArray(new Vector2[pathVerts.size()]), 0.1f, 0, 0, 100));
         }

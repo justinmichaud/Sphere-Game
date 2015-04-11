@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
@@ -26,8 +27,11 @@ public class CulminatingGame extends ApplicationAdapter {
     public Player player;
     public World world;
     private Box2DDebugRenderer b2Renderer;
-    private ShapeRenderer renderer;
+    private ShapeRenderer shapeRenderer;
+    private SpriteBatch spriteRenderer;
     public OrthographicCamera camera;
+
+    private Texture collisionBackground;
 
     public ArrayList<TerrainSection> terrain = new ArrayList<TerrainSection>();
 	
@@ -35,10 +39,13 @@ public class CulminatingGame extends ApplicationAdapter {
 	public void create () {
 		world = new World(new Vector2(0, 0), true);
         b2Renderer = new Box2DDebugRenderer(true, false, false, false, false, false);
-        renderer = new ShapeRenderer();
+        shapeRenderer = new ShapeRenderer();
+        spriteRenderer = new SpriteBatch();
         camera = new OrthographicCamera(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-        camera.zoom = 1f/10;
+        camera.zoom = 1f/30;
         player = new Player(this);
+
+        collisionBackground = new Texture("test.png");
 
 //        TerrainSection[] path = TerrainUtils.generatePath(world, new Vector2[] {
 //                new Vector2(0,0),
@@ -67,7 +74,7 @@ public class CulminatingGame extends ApplicationAdapter {
 //        addOneWayPlatform(world, 5, 30);
 
         try {
-            ArrayList<TerrainSection> ts = TerrainUtils.loadFromImage(world, ImageIO.read(Gdx.files.internal("test.png").read()), 100, 100);
+            ArrayList<TerrainSection> ts = TerrainUtils.loadFromImage(world, ImageIO.read(Gdx.files.internal("test.png").read()), 1);
             for (TerrainSection t : ts) terrain.add(t);
         } catch (IOException e) {
             e.printStackTrace();
@@ -119,6 +126,12 @@ public class CulminatingGame extends ApplicationAdapter {
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
         camera.update();
+
+        spriteRenderer.begin();
+        spriteRenderer.setProjectionMatrix(camera.combined);
+        spriteRenderer.draw(collisionBackground, 0, 0);
+        spriteRenderer.end();
+
 		b2Renderer.render(world, camera.combined);
 
 //        renderer.setProjectionMatrix(camera.combined);
