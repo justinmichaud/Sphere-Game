@@ -32,7 +32,7 @@ public class CulminatingGame extends ApplicationAdapter {
     private float totalFrameTime = 0;
     private int frames = 0;
 
-    private float terrainScale = 0.071f;
+    private float terrainScale = 0.07f;
     private String terrainImage = "test3.png";
 
     private Texture collisionBackground;
@@ -124,6 +124,9 @@ public class CulminatingGame extends ApplicationAdapter {
 
 		Gdx.gl.glClearColor(1, 1, 1, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+
+        if (Gdx.input.isKeyPressed(Input.Keys.Z)) camera.zoom = 1f/50;
+        else camera.zoom = 1f/15;
 
         camera.update();
 
