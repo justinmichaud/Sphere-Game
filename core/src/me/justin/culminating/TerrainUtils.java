@@ -11,6 +11,7 @@ import com.badlogic.gdx.physics.box2d.PolygonShape;
 import com.badlogic.gdx.physics.box2d.World;
 
 import java.awt.image.BufferedImage;
+import java.nio.Buffer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -91,27 +92,17 @@ public class TerrainUtils {
         for (int x=0; x<img.getWidth(); x++) {
             for (int y=0; y<img.getHeight(); y++) {
 
-                if (img.getRGB(x, y) != 0xFF000000) continue; //if not black, continue
-
-                //Check neighbours to see if this pixel is a boundary
-                boolean isBoundary = false;
-                for (int nx = MathUtils.clamp(x-1, 0, img.getWidth()-1); !isBoundary && nx<= MathUtils.clamp(x+1, 0, img.getWidth()-1); nx++) {
-                    for (int ny = MathUtils.clamp(y-1, 0, img.getHeight()-1); !isBoundary && ny<= MathUtils.clamp(y+1, 0, img.getHeight()-1); ny++) {
-                        //if (nx == x+1 && ny == y+1 || nx == x-1 && ny == y+1
-                        //        || nx == x-1 && ny == y-1 || nx == x-1 && ny == y+1) continue;
-                        if (nx == x && ny == y) continue;
-
-                        if (img.getRGB(nx,ny) == 0xFFFFFFFF) isBoundary = true; //white
-                    }
-                }
-
-                //If it is a boundary, then we look for edge connections to neighbours
-                if (isBoundary) {
+                if (isBoundary(x,y,img)) {
                     Vector2 curr = new Vector2(x*finalWidth/img.getWidth(), y*finalHeight/img.getHeight());
+
                     for (int nx = MathUtils.clamp(x-1, 0, img.getWidth()-1); nx<= MathUtils.clamp(x+1, 0, img.getWidth()-1); nx++) {
                         for (int ny = MathUtils.clamp(y-1, 0, img.getHeight()-1); ny<= MathUtils.clamp(y+1, 0, img.getHeight()-1); ny++) {
+
                             if (nx == x && ny == y) continue;
-                            if (img.getRGB(nx,ny) == 0xFF000000) graph.add(curr, new Vector2(nx*finalWidth/img.getWidth(), ny*finalHeight/img.getHeight()), 1);
+
+                            if (isBoundary(nx, ny, img)) {
+                                graph.add(curr, new Vector2(nx*finalWidth/img.getWidth(), ny*finalHeight/img.getHeight()), 1);
+                            }
                         }
                     }
                 }
@@ -119,6 +110,23 @@ public class TerrainUtils {
         }
 
         return graph;
+    }
+
+    private static boolean isBoundary(int x, int y, BufferedImage img) {
+
+        if (img.getRGB(x,y) != 0xFF000000) return false; //Not solid
+
+        for (int nx = MathUtils.clamp(x-1, 0, img.getWidth()-1); nx<= MathUtils.clamp(x+1, 0, img.getWidth()-1); nx++) {
+            for (int ny = MathUtils.clamp(y-1, 0, img.getHeight()-1); ny<= MathUtils.clamp(y+1, 0, img.getHeight()-1); ny++) {
+                //if (nx == x+1 && ny == y+1 || nx == x-1 && ny == y+1
+                //        || nx == x-1 && ny == y-1 || nx == x-1 && ny == y+1) continue;
+                if (nx == x && ny == y) continue;
+
+                if (img.getRGB(nx,ny) == 0xFFFFFFFF) return true; //white
+            }
+        }
+
+        return false;
     }
 
     //I could probably bake this at runtime to help performance

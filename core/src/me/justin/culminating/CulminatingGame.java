@@ -37,7 +37,7 @@ public class CulminatingGame extends ApplicationAdapter {
         b2Renderer = new Box2DDebugRenderer(true, false, false, false, false, false);
         renderer = new ShapeRenderer();
         camera = new OrthographicCamera(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-        camera.zoom = 1f/60;
+        camera.zoom = 1f/50;
         player = new Player(this);
 
 //        TerrainSection[] path = TerrainUtils.generatePath(world, new Vector2[] {
