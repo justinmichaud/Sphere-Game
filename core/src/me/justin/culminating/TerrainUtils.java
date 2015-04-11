@@ -1,24 +1,16 @@
 package me.justin.culminating;
 
-import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.physics.box2d.BodyDef;
-import com.badlogic.gdx.physics.box2d.FixtureDef;
-import com.badlogic.gdx.physics.box2d.PolygonShape;
 import com.badlogic.gdx.physics.box2d.World;
 
-import java.awt.image.BufferedImage;
-import java.nio.Buffer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.Queue;
 import java.util.Set;
 import java.util.Stack;
 
@@ -85,7 +77,7 @@ public class TerrainUtils {
         }
     }
 
-    private static CollisionImageGraph buildGraph(BufferedImage img, float scale) {
+    private static CollisionImageGraph buildGraph(Pixmap img, float scale) {
         CollisionImageGraph graph = new CollisionImageGraph();
 
         for (int x=0; x<img.getWidth(); x++) {
@@ -111,9 +103,9 @@ public class TerrainUtils {
         return graph;
     }
 
-    private static boolean isBoundary(int x, int y, BufferedImage img) {
+    private static boolean isBoundary(int x, int y, Pixmap img) {
 
-        if (img.getRGB(x,y) != 0xFF000000) return false; //Not solid
+        if (img.getPixel(x,y) != 0x000000FF) return false; //Not solid
 
         for (int nx = MathUtils.clamp(x-1, 0, img.getWidth()-1); nx<= MathUtils.clamp(x+1, 0, img.getWidth()-1); nx++) {
             for (int ny = MathUtils.clamp(y-1, 0, img.getHeight()-1); ny<= MathUtils.clamp(y+1, 0, img.getHeight()-1); ny++) {
@@ -121,15 +113,15 @@ public class TerrainUtils {
                         || nx == x-1 && ny == y-1 || nx == x+1 && ny == y-1) continue;
                 if (nx == x && ny == y) continue;
 
-                if (img.getRGB(nx,ny) != 0xFF000000) return true; //white
+                if (img.getPixel(nx, ny) != 0x000000FF) return true; //white
             }
         }
 
         return false;
     }
 
-    //Java's image libraries have origin in top left, libgdx in bottom left
-    private static float getWorldY(float y, BufferedImage img) {
+    //Pixmaps have origin in top left, libgdx and box2d in bottom left
+    private static float getWorldY(float y, Pixmap img) {
         return img.getHeight()-y-1;
     }
 
@@ -225,7 +217,7 @@ public class TerrainUtils {
     }
 
     //I could probably bake this at runtime to help performance
-    public static ArrayList<TerrainSection> loadFromImage(World world, BufferedImage img, float scale, float smoothness) {
+    public static ArrayList<TerrainSection> loadFromImage(World world, Pixmap img, float scale, float smoothness) {
         ArrayList<TerrainSection> path = new ArrayList<TerrainSection>();
         CollisionImageGraph graph = buildGraph(img, scale);
 

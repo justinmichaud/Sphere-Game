@@ -1,12 +1,12 @@
 package me.justin.culminating;
 
 import com.badlogic.gdx.ApplicationAdapter;
-import com.badlogic.gdx.Files;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
@@ -18,10 +18,7 @@ import com.badlogic.gdx.physics.box2d.ContactListener;
 import com.badlogic.gdx.physics.box2d.Manifold;
 import com.badlogic.gdx.physics.box2d.World;
 
-import java.io.IOException;
 import java.util.ArrayList;
-
-import javax.imageio.ImageIO;
 
 public class CulminatingGame extends ApplicationAdapter {
 
@@ -80,12 +77,8 @@ public class CulminatingGame extends ApplicationAdapter {
 //        addOneWayPlatform(world, -15, 30);
 //        addOneWayPlatform(world, 5, 30);
 
-        try {
-            ArrayList<TerrainSection> ts = TerrainUtils.loadFromImage(world, ImageIO.read(Gdx.files.internal(terrainImage).read()), terrainScale, 0.1f);
-            for (TerrainSection t : ts) terrain.add(t);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        ArrayList<TerrainSection> ts = TerrainUtils.loadFromImage(world, new Pixmap(Gdx.files.internal(terrainImage)), terrainScale, 0.1f);
+        for (TerrainSection t : ts) terrain.add(t);
 
         world.setContactListener(new ContactListener() {
             @Override
