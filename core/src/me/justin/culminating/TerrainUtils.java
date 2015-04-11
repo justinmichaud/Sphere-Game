@@ -173,7 +173,7 @@ public class TerrainUtils {
 
             path.add(path.get(0)); //We assume that they will always be closed paths
 
-            paths.add(path);
+            if (path.size() > 2) paths.add(path);
         }
 
         return paths;
@@ -201,7 +201,7 @@ public class TerrainUtils {
     private static ArrayList<Vector2> simplifyLine(ArrayList<Vector2> line, float smoothness) {
         ArrayList<Vector2> list = new ArrayList<Vector2>();
         list.add(line.get(0));
-        list.addAll(simplifyLineSection(line, 1, line.size()-2, smoothness));
+        list.addAll(simplifyLineSection(line, 1, line.size() - 2, smoothness));
         list.add(line.get(line.size()-1));
         return list;
     }

@@ -77,7 +77,7 @@ public class CulminatingGame extends ApplicationAdapter {
 //        addOneWayPlatform(world, -15, 30);
 //        addOneWayPlatform(world, 5, 30);
 
-        ArrayList<TerrainSection> ts = TerrainUtils.loadFromImage(world, new Pixmap(Gdx.files.internal(terrainImage)), terrainScale, 0.5f);
+        ArrayList<TerrainSection> ts = TerrainUtils.loadFromImage(world, new Pixmap(Gdx.files.internal(terrainImage)), terrainScale, 0.2f);
         for (TerrainSection t : ts) terrain.add(t);
 
         world.setContactListener(new ContactListener() {
