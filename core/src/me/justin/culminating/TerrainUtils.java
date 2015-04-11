@@ -57,14 +57,21 @@ public class TerrainUtils {
 
         public HashMap<Vector2, LinkedList<Edge>> adjacencyList = new HashMap<Vector2, LinkedList<Edge>>();
 
-        //Use digraph so when it is built, there are no dupes
-        // (as every boundary point is visited, and thus makes a directed edge from it to its boundary neighbours already)
         public void add(Vector2 a, Vector2 b, int weight) {
             if (!adjacencyList.containsKey(a)) adjacencyList.put(a, new LinkedList<Edge>());
-//            if (!adjacencyList.containsKey(b)) adjacencyList.put(b, new LinkedList<Edge>());
+            if (!adjacencyList.containsKey(b)) adjacencyList.put(b, new LinkedList<Edge>());
+
+            //Ensure that there are no duplicate edges
+            if (a.equals(b)) return;
+            for (Edge e : adj(a)) {
+                if (e.a.equals(a) && e.b.equals(b)) return;
+            }
+            for (Edge e : adj(b)) {
+                if (e.a.equals(b) && e.b.equals(a)) return;
+            }
 
             adjacencyList.get(a).add(new Edge(a,b, weight));
-//            adjacencyList.get(b).add(new Edge(b,a, weight));
+            adjacencyList.get(b).add(new Edge(b,a, weight));
         }
 
         public Iterable<Edge> adj(Vector2 v) {
@@ -126,7 +133,9 @@ public class TerrainUtils {
     }
 
     private static void discardVertex(CollisionImageGraph g, Vector2 v) {
+
         //Connect each neighbour to each other neighbour to make this vertex redundant
+        //We assume that there are at most 2 links (left and right) to this vertex
         for (CollisionImageGraph.Edge e : g.adj(v)) {
             Vector2 n = e.other(v);
 
@@ -141,7 +150,6 @@ public class TerrainUtils {
         // (under the assumption that there are no unpaired directed edges
         for (CollisionImageGraph.Edge e : g.adj(v)) {
             Vector2 vertex = e.other(v);
-
             Iterator<CollisionImageGraph.Edge> itr = g.adj(vertex).iterator();
 
             while (itr.hasNext()) {
@@ -206,9 +214,11 @@ public class TerrainUtils {
                 }
 
                 if (!sharp) discardVertex(g,v);
-
-                else for (CollisionImageGraph.Edge e : g.adj(v)) {
-                    if (!visited.contains(e.other(v)) && !toVisit.contains(e.other(v))) toVisit.add(e.other(v));
+                else {
+                    for (CollisionImageGraph.Edge e : g.adj(v)) {
+                        if (!visited.contains(e.other(v)) && !toVisit.contains(e.other(v)))
+                            toVisit.add(e.other(v));
+                    }
                 }
             }
         }
