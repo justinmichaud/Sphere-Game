@@ -86,6 +86,7 @@ public class TerrainUtils {
         }
     }
 
+    //god this is awful
     private static CollisionImageGraph buildGraph(Pixmap img, float scale) {
         CollisionImageGraph graph = new CollisionImageGraph();
 
@@ -108,46 +109,6 @@ public class TerrainUtils {
             }
         }
 
-        ArrayList<Vector2> redundant = new ArrayList<Vector2>();
-
-        //Find and fix redundant vertices
-        for (Vector2 v : graph.vertices()) {
-            if (graph.adjacencyList.get(v).size() == 2) continue;
-
-            Vector2 closestNeighbour = null;
-
-            //When there are redundant edges that might screw up our path,
-            for (CollisionImageGraph.Edge e : graph.adj(v)) {
-                Vector2 other = e.other(v);
-
-                if (closestNeighbour == null || other.dst2(v) < closestNeighbour.dst2(v)) closestNeighbour = other;
-            }
-
-            for (CollisionImageGraph.Edge e : graph.adj(v)) {
-                if (!e.other(v).equals(closestNeighbour)
-                        && graph.adjacencyList.get(e.other(v)).size() > 2) redundant.add(e.other(v));
-            }
-        }
-
-        System.out.println(redundant.size() + " redundant vertices");
-
-        for (Vector2 v : redundant) {
-            if (!graph.adjacencyList.containsKey(v)) continue; //Already deleted (in case of dupes)
-
-            for (CollisionImageGraph.Edge e : graph.adj(v)) {
-                Iterator<CollisionImageGraph.Edge> itr = graph.adj(e.other(v)).iterator();
-
-                while (itr.hasNext()) {
-                    CollisionImageGraph.Edge e2 = itr.next();
-                    if (e2.a.equals(v) || e2.b.equals(v)) itr.remove();
-                }
-            }
-
-            graph.adjacencyList.remove(v);
-        }
-
-        for (Vector2 v : graph.vertices()) assert graph.adjacencyList.get(v).size() == 2 : graph.adjacencyList.get(v).size();
-
         return graph;
     }
 
@@ -157,6 +118,7 @@ public class TerrainUtils {
 
         for (int nx = MathUtils.clamp(x-1, 0, img.getWidth()-1); nx<= MathUtils.clamp(x+1, 0, img.getWidth()-1); nx++) {
             for (int ny = MathUtils.clamp(y-1, 0, img.getHeight()-1); ny<= MathUtils.clamp(y+1, 0, img.getHeight()-1); ny++) {
+                //Ignore diagonals when checking boundaries
                 if (nx == x+1 && ny == y+1 || nx == x-1 && ny == y+1
                         || nx == x-1 && ny == y-1 || nx == x+1 && ny == y-1) continue;
                 if (nx == x && ny == y) continue;
@@ -279,38 +241,38 @@ public class TerrainUtils {
     //I could probably bake this at runtime to help performance
     public static ArrayList<TerrainSection> loadFromImage(World world, Pixmap img, float scale, float smoothness) {
         ArrayList<TerrainSection> terrain = new ArrayList<TerrainSection>();
-//
-//        int beforeSize = 0, afterSize = 0;
-//
-//        for (ArrayList<Vector2> path : getPaths(img, scale)) {
-//            beforeSize += path.size();
-//            ArrayList<Vector2> simplified = simplifyLine(path, smoothness);
-//            afterSize += simplified.size();
-//            Collections.addAll(terrain, generatePath(world, simplified.toArray(new Vector2[simplified.size()]), 0.1f, 0, 0, 100));
-//        }
-//
-//        System.out.println("Collision geometry verts before simplification: " + beforeSize);
-//        System.out.println("Collision geometry verts after simplification: " + afterSize);
-//        System.out.println("Smoothness: " + smoothness + "; Reduction: " + (float)afterSize/beforeSize * 100 + "%");
 
-        CollisionImageGraph graph = buildGraph(img, scale);
+        int beforeSize = 0, afterSize = 0;
 
-        for (Vector2 v : graph.vertices()) {
-            for (CollisionImageGraph.Edge e : graph.adj(v)) {
-                Vector2 to = e.other(v);
-
-                Vector2 topLeft = (v.x < to.x ? v : to);
-                Vector2 topRight = (v.x < to.x ? to : v);
-
-                Vector2 topEdge = topRight.cpy().sub(topLeft).nor();
-                Vector2 normal = new Vector2(-topEdge.y, topEdge.x).nor();
-
-                Vector2 bottomRight = topRight.cpy().sub(normal.cpy().scl(0.1f));
-                Vector2 bottomLeft = topLeft.cpy().sub(normal.cpy().scl(0.1f));
-                terrain.add(new TerrainSectionPolygon(world, 0, 0, new Vector2[] {bottomLeft, bottomRight, topRight, topLeft}, 100));
-            }
-
+        for (ArrayList<Vector2> path : getPaths(img, scale)) {
+            beforeSize += path.size();
+            ArrayList<Vector2> simplified = simplifyLine(path, smoothness);
+            afterSize += simplified.size();
+            Collections.addAll(terrain, generatePath(world, simplified.toArray(new Vector2[simplified.size()]), 0.1f, 0, 0, 100));
         }
+
+        System.out.println("Collision geometry verts before simplification: " + beforeSize);
+        System.out.println("Collision geometry verts after simplification: " + afterSize);
+        System.out.println("Smoothness: " + smoothness + "; Reduction: " + (float)afterSize/beforeSize * 100 + "%");
+
+//        CollisionImageGraph graph = buildGraph(img, scale);
+//
+//        for (Vector2 v : graph.vertices()) {
+//            for (CollisionImageGraph.Edge e : graph.adj(v)) {
+//                Vector2 to = e.other(v);
+//
+//                Vector2 topLeft = (v.x < to.x ? v : to);
+//                Vector2 topRight = (v.x < to.x ? to : v);
+//
+//                Vector2 topEdge = topRight.cpy().sub(topLeft).nor();
+//                Vector2 normal = new Vector2(-topEdge.y, topEdge.x).nor();
+//
+//                Vector2 bottomRight = topRight.cpy().sub(normal.cpy().scl(0.1f));
+//                Vector2 bottomLeft = topLeft.cpy().sub(normal.cpy().scl(0.1f));
+//                terrain.add(new TerrainSectionPolygon(world, 0, 0, new Vector2[] {bottomLeft, bottomRight, topRight, topLeft}, 100));
+//            }
+//
+//        }
 
         return terrain;
     }
