@@ -1,25 +1,22 @@
-package me.justin.culminating;
+package me.justin.culminating.entities;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
-import com.badlogic.gdx.physics.box2d.Body;
-import com.badlogic.gdx.physics.box2d.BodyDef;
-import com.badlogic.gdx.physics.box2d.CircleShape;
 import com.badlogic.gdx.physics.box2d.Contact;
 import com.badlogic.gdx.physics.box2d.Fixture;
-import com.badlogic.gdx.physics.box2d.FixtureDef;
 
 import java.util.ArrayList;
 
-public class Player {
+import me.justin.culminating.TerrainSection;
+import me.justin.culminating.World;
+import me.justin.culminating.components.BoundingBox;
+import me.justin.culminating.entities.Entity;
 
-    private Body body;
-    private CulminatingGame game;
+public class Player extends Entity {
 
-    public Vector2 position = new Vector2(0,0);
+    public BoundingBox boundingBox;
 
     //Maintain a list of all collisions with the floor so we know when they can jump
     private ArrayList<Fixture> floorCollisions = new ArrayList<Fixture>();
@@ -32,28 +29,9 @@ public class Player {
 
     private PlayerState state = PlayerState.FALLING;
 
-    public Player(CulminatingGame game) {
-        this.game = game;
-
-        BodyDef playerDef = new BodyDef();
-        playerDef.type = BodyDef.BodyType.DynamicBody;
-        playerDef.position.set(position);
-        body = game.world.createBody(playerDef);
-
-        {
-            CircleShape shape = new CircleShape();
-            shape.setRadius(1);
-
-            FixtureDef def = new FixtureDef();
-            def.shape = shape;
-            def.density = 1f;
-            def.friction = 0;
-            def.restitution = 0;
-
-            body.createFixture(def);
-        }
-
-        body.setUserData(this);
+    public Player(World world) {
+        super(world);
+        this.boundingBox = new BoundingBox(this);
     }
 
     public void update() {
@@ -81,18 +59,18 @@ public class Player {
         }
 
         //realistic friction would cause them to stick to walls, so we handle friction ourselves
-        float horizontalVelocity = body.getLinearVelocity().dot(perpendicularGravity) * 0.8f;
-        float verticalVelocity = Math.max(-1000, Math.min(1000, body.getLinearVelocity().dot(gravity)));
-        body.setLinearVelocity(new Vector2(gravity.cpy().scl(verticalVelocity).add(perpendicularGravity.cpy().scl(horizontalVelocity))));
+        float horizontalVelocity = boundingBox.body.getLinearVelocity().dot(perpendicularGravity) * 0.8f;
+        float verticalVelocity = Math.max(-1000, Math.min(1000, boundingBox.body.getLinearVelocity().dot(gravity)));
+        boundingBox.body.setLinearVelocity(new Vector2(gravity.cpy().scl(verticalVelocity).add(perpendicularGravity.cpy().scl(horizontalVelocity))));
 
         //Move this frame
-        body.applyForceToCenter(gravity.cpy().scl(forceY).add(perpendicularGravity.cpy().scl(forceX)), true);
-        position = body.getPosition();
+        boundingBox.body.applyForceToCenter(gravity.cpy().scl(forceY).add(perpendicularGravity.cpy().scl(forceX)), true);
+        boundingBox.update();
 
-        game.camera.position.set(position.x, position.y, 0);
+        world.camera.position.set(boundingBox.position.x, boundingBox.position.y, 0);
         //interpolate between the current camera position and the desired one to make movement more smooth
-        game.camera.up.scl(0.9f).add(new Vector3(-gravity.x, -gravity.y, 0).nor().scl(0.1f)).nor();
-        body.setTransform(body.getPosition(), (float)Math.toRadians(gravity.angle() + 180));
+        world.camera.up.scl(0.9f).add(new Vector3(-gravity.x, -gravity.y, 0).nor().scl(0.1f)).nor();
+        boundingBox.body.setTransform(boundingBox.body.getPosition(), (float)Math.toRadians(gravity.angle() + 180));
     }
 
     //Claculate the current influence of gravity on the player
@@ -102,11 +80,11 @@ public class Player {
             Vector2 gravity = new Vector2();
             TerrainSection closest = null;
 
-            for (TerrainSection s : game.terrain) {
-                float dist = s.getDistance(position);
+            for (TerrainSection s : world.terrain) {
+                float dist = s.getDistance(boundingBox.position);
                 if (dist < 500)
                     //Weighted average
-                    gravity.add(s.getGravityDirection(position).scl(1f/(dist*dist) * s.mass));
+                    gravity.add(s.getGravityDirection(boundingBox.position).scl(1f/(dist*dist) * s.mass));
             }
 
             //We want constant gravity everywhere (so they don't get stuck)
@@ -115,7 +93,7 @@ public class Player {
         else {
             Vector2 avg = new Vector2();
             for (TerrainSection t : currentTerrain) {
-                avg.add(t.getGravityDirection(position));
+                avg.add(t.getGravityDirection(boundingBox.position));
             }
             avg.scl(1f/currentTerrain.size());
             return avg;
@@ -126,7 +104,7 @@ public class Player {
     public void onCollideGround(Contact contact) {
         state = PlayerState.WALKING;
 
-        if (contact.getFixtureA().getBody() == body) {
+        if (contact.getFixtureA().getBody() == boundingBox.body) {
             floorCollisions.add(contact.getFixtureB());
             currentTerrain.add((TerrainSection) contact.getFixtureB().getBody().getUserData());
         }
@@ -138,7 +116,7 @@ public class Player {
 
     public void onLeaveGround(Contact contact) {
 
-        if (contact.getFixtureA().getBody() == body) {
+        if (contact.getFixtureA().getBody() == boundingBox.body) {
             floorCollisions.remove(contact.getFixtureB());
             currentTerrain.remove((TerrainSection) contact.getFixtureB().getBody().getUserData());
         }
