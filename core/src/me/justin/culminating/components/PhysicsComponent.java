@@ -12,14 +12,14 @@ import me.justin.culminating.entities.Entity;
 /**
  * Created by justin on 16/04/15.
  */
-public class BoundingBox {
+public class PhysicsComponent {
 
     public Body body;
     private Entity parent;
 
     public Vector2 position = new Vector2(0,0);
 
-    public BoundingBox(Entity entity) {
+    public PhysicsComponent(Entity entity) {
 
         this.parent = entity;
 
@@ -42,6 +42,24 @@ public class BoundingBox {
         }
 
         body.setUserData(parent);
+    }
+
+
+    //Apply a force relative to the current orientation (Gravity direction)
+    public void applyLocalForce(float forceX, float forceY, Vector2 gravity) {
+        Vector2 perpendicularGravity = new Vector2(-gravity.y, gravity.x).nor();
+
+        //Move this frame
+        body.applyForceToCenter(gravity.cpy().scl(forceY).add(perpendicularGravity.cpy().scl(forceX)), true);
+    }
+
+    public void applyFriction(Vector2 gravity) {
+        Vector2 perpendicularGravity = new Vector2(-gravity.y, gravity.x).nor();
+
+        //realistic friction would cause them to stick to walls, so we handle friction ourselves
+        float horizontalVelocity = body.getLinearVelocity().dot(perpendicularGravity) * 0.8f;
+        float verticalVelocity = Math.max(-1000, Math.min(1000, body.getLinearVelocity().dot(gravity)));
+        body.setLinearVelocity(new Vector2(gravity.cpy().scl(verticalVelocity).add(perpendicularGravity.cpy().scl(horizontalVelocity))));
     }
 
     public void update() {

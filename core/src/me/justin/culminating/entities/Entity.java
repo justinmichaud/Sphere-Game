@@ -1,5 +1,7 @@
 package me.justin.culminating.entities;
 
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+
 import me.justin.culminating.World;
 
 /**
@@ -14,5 +16,5 @@ public abstract class Entity {
     }
 
     public abstract void update();
-    //public abstract void render();
+    public abstract void renderShapes(ShapeRenderer renderer);
 }

@@ -17,6 +17,7 @@ import com.badlogic.gdx.physics.box2d.Manifold;
 
 import java.util.ArrayList;
 
+import me.justin.culminating.entities.Entity;
 import me.justin.culminating.entities.Player;
 
 /**
@@ -26,6 +27,8 @@ public class World {
 
     public Player player;
     public com.badlogic.gdx.physics.box2d.World physicsWorld;
+
+    public ArrayList<Entity> entities = new ArrayList<Entity>();
 
     private Box2DDebugRenderer b2Renderer;
     private ShapeRenderer shapeRenderer;
@@ -48,6 +51,7 @@ public class World {
         camera = new OrthographicCamera(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         camera.zoom = 1f/15;
         player = new Player(this);
+        entities.add(player);
 
         collisionBackground = new Texture(terrainImage);
 
@@ -97,7 +101,7 @@ public class World {
         else camera.zoom = 1f/15;
 
         physicsWorld.step(1/60f, 6, 2);
-        player.update();
+        for (Entity e : entities) e.update();
 
         camera.update();
     }
@@ -115,9 +119,24 @@ public class World {
         shapeRenderer.setColor(Color.RED);
         shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
 
-        shapeRenderer.circle(player.boundingBox.position.x, player.boundingBox.position.y, 1, 30);
+        for (Entity e : entities) e.renderShapes(shapeRenderer);
 
         shapeRenderer.end();
+    }
+
+
+    //Claculate the weighted average of gravity directions
+    public Vector2 calculateGravityDirection(Vector2 position, Iterable<TerrainSection> terrain) {
+        Vector2 gravity = new Vector2();
+        TerrainSection closest = null;
+
+        for (TerrainSection s : terrain) {
+            float dist = s.getDistance(position);
+            if (dist < 500)
+                gravity.add(s.getGravityDirection(position).scl(1f / (dist * dist) * s.mass));
+        }
+
+        return gravity.nor();
     }
 
 }
