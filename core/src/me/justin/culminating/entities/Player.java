@@ -63,7 +63,7 @@ public class Player extends Entity {
 
         world.camera.position.set(physicsComponent.position.x, physicsComponent.position.y, 0);
         //interpolate between the current camera position and the desired one to make movement more smooth
-        world.camera.up.scl(0.9f).add(new Vector3(-gravity.x, -gravity.y, 0).nor().scl(0.1f)).nor();
+        world.camera.up.scl(0.92f).add(new Vector3(-gravity.x, -gravity.y, 0).nor().scl(0.08f)).nor();
         physicsComponent.body.setTransform(physicsComponent.body.getPosition(), (float)Math.toRadians(gravity.angle() + 180));
     }
 

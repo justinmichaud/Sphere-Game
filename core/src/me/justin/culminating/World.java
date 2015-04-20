@@ -8,6 +8,7 @@ import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
 import com.badlogic.gdx.physics.box2d.Contact;
@@ -36,8 +37,7 @@ public class World {
 
     public OrthographicCamera camera;
 
-    private float terrainScale = 0.07f;
-    private String terrainImage = "test3.png";
+    private float terrainScale = 0.055f;
 
     private Texture collisionBackground;
 
@@ -53,9 +53,39 @@ public class World {
         player = new Player(this);
         entities.add(player);
 
-        collisionBackground = new Texture(terrainImage);
+        float g = 3;
+        float[] blobs = new float[] {
+                101,101,100,
+                300,400,200,
+                400,300,250,
+                80,120,40,
+        };
 
-        ArrayList<TerrainSection> ts = TerrainUtils.loadFromImage(physicsWorld, new Pixmap(Gdx.files.internal(terrainImage)), terrainScale, 0.1f);
+        Pixmap img = new Pixmap(1000,1000, Pixmap.Format.RGBA8888);
+
+        for (int x=0; x<img.getWidth(); x++) {
+            for (int y=0; y<img.getHeight(); y++) {
+                float value = 0;
+
+                for (int i=0; i<blobs.length; i+=3) {
+                    float bx = blobs[i];
+                    float by = blobs[i+1];
+                    float br = blobs[i+2];
+
+                    value += Math.pow(br, g) / Math.pow(Math.sqrt((bx - x)*(bx-x) + (by-y)*(by-y)), g);
+                }
+
+                if (value > 5) value = 0;
+                else value = 1;
+
+                value = MathUtils.clamp(value, 0, 1);
+                img.drawPixel(x,y,Color.rgba8888(value,value,value,1));
+            }
+        }
+
+        collisionBackground = new Texture(img);
+
+        ArrayList<TerrainSection> ts = TerrainUtils.loadFromImage(physicsWorld, img, terrainScale, 0.1f);
         for (TerrainSection t : ts) terrain.add(t);
 
         physicsWorld.setContactListener(new ContactListener() {
