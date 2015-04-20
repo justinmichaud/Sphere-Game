@@ -15,7 +15,7 @@ import me.justin.culminating.World;
 /**
  * Created by justin on 20/04/15.
  *
- * A gameobject with a bounding box and collision logic
+ * A gameobject with a bounding box, collision logic and gravity logic
  */
 public abstract class Entity extends GameObject {
 

@@ -59,14 +59,22 @@ public class World {
         entities.add(player);
 
         float g = 3;
-        float[] blobs = new float[] {
-                101,101,100,
-                300,400,200,
-                400,300,250,
-                80,120,40,
-        };
+        float[] blobs = new float[50*3];
 
-        Pixmap img = new Pixmap(1000,1000, Pixmap.Format.RGBA8888);
+        int width = 5000, height = 2000;
+
+        for (int i=0; i<blobs.length; i+=3) {
+
+            float x = (float) Math.random()*width;
+            float y = (float) Math.random()*height;
+            float r = (float) Math.random()*300 + 60;
+
+            blobs[i] = MathUtils.clamp(x, r, width-r);
+            blobs[i+1] = MathUtils.clamp(y, r, height-r);
+            blobs[i+2] = r;
+        }
+
+        Pixmap img = new Pixmap(width,height, Pixmap.Format.RGBA8888);
 
         for (int x=0; x<img.getWidth(); x++) {
             for (int y=0; y<img.getHeight(); y++) {
@@ -76,6 +84,8 @@ public class World {
                     float bx = blobs[i];
                     float by = blobs[i+1];
                     float br = blobs[i+2];
+
+                    if ((bx-x)*(bx-x) + (by-y)*(by-y) > (br + 1000)*(br + 1000)) continue;
 
                     value += Math.pow(br, g) / Math.pow(Math.sqrt((bx - x)*(bx-x) + (by-y)*(by-y)), g);
                 }
@@ -88,10 +98,16 @@ public class World {
             }
         }
 
+        System.out.println("Done generating blobs");
+
         collisionBackground = new Texture(img);
+
+        System.out.println("Done loading blobs texture");
 
         ArrayList<TerrainSection> ts = TerrainUtils.loadFromImage(this, img, terrainScale, 0.1f);
         for (TerrainSection t : ts) terrain.add(t);
+
+        System.out.println("Done generating collision geometry");
 
         physicsWorld.setContactListener(new ContactListener() {
             @Override
