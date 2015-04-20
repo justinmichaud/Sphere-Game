@@ -1,12 +1,12 @@
-package me.justin.culminating;
+package me.justin.culminating.entities;
 
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.PolygonShape;
-import com.badlogic.gdx.physics.box2d.World;
+
+import me.justin.culminating.World;
 
 /**
  * Created by justin on 05/04/15.
@@ -26,7 +26,7 @@ public class TerrainSectionPolygon extends TerrainSection {
         BodyDef def = new BodyDef();
         def.type = BodyDef.BodyType.StaticBody;
         def.position.set(position);
-        body = world.createBody(def);
+        body = world.physicsWorld.createBody(def);
 
         shape = new PolygonShape();
         shape.set(vertices);
@@ -88,5 +88,15 @@ public class TerrainSectionPolygon extends TerrainSection {
     @Override
     public Vector2 getGravityDirection(Vector2 playerFeet) {
         return getClosestSurfacePoint(playerFeet).sub(playerFeet).nor();
+    }
+
+    @Override
+    public void update() {
+
+    }
+
+    @Override
+    public void renderShapes(ShapeRenderer renderer) {
+
     }
 }

@@ -3,16 +3,17 @@ package me.justin.culminating;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.physics.box2d.World;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Set;
 import java.util.Stack;
+
+import me.justin.culminating.entities.TerrainSection;
+import me.justin.culminating.entities.TerrainSectionPolygon;
 
 /**
  * Created by justin on 05/04/15.

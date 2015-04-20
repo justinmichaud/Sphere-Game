@@ -1,11 +1,12 @@
-package me.justin.culminating;
+package me.justin.culminating.entities;
 
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.CircleShape;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
-import com.badlogic.gdx.physics.box2d.World;
+
+import me.justin.culminating.World;
 
 /**
  * Created by justin on 05/04/15.
@@ -21,7 +22,7 @@ public class TerrainSectionSphere extends TerrainSection {
         BodyDef def = new BodyDef();
         def.type = BodyDef.BodyType.StaticBody;
         def.position.set(position);
-        body = world.createBody(def);
+        body = world.physicsWorld.createBody(def);
 
         CircleShape shape = new CircleShape();
         shape.setRadius(radius);
@@ -43,5 +44,15 @@ public class TerrainSectionSphere extends TerrainSection {
     @Override
     public Vector2 getGravityDirection(Vector2 playerFeet) {
         return position.cpy().sub(playerFeet).nor();
+    }
+
+    @Override
+    public void update() {
+
+    }
+
+    @Override
+    public void renderShapes(ShapeRenderer renderer) {
+
     }
 }

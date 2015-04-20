@@ -19,7 +19,12 @@ import com.badlogic.gdx.physics.box2d.Manifold;
 import java.util.ArrayList;
 
 import me.justin.culminating.entities.Entity;
+import me.justin.culminating.entities.GameObject;
 import me.justin.culminating.entities.Player;
+import me.justin.culminating.entities.TerrainSection;
+import me.justin.culminating.entities.TerrainSectionOneWayGravity;
+import me.justin.culminating.entities.TerrainSectionPolygon;
+import me.justin.culminating.entities.TerrainSectionSphere;
 
 /**
  * Created by justin on 16/04/15.
@@ -29,7 +34,7 @@ public class World {
     public Player player;
     public com.badlogic.gdx.physics.box2d.World physicsWorld;
 
-    public ArrayList<Entity> entities = new ArrayList<Entity>();
+    public ArrayList<GameObject> entities = new ArrayList<GameObject>();
 
     private Box2DDebugRenderer b2Renderer;
     private ShapeRenderer shapeRenderer;
@@ -50,7 +55,7 @@ public class World {
         spriteRenderer = new SpriteBatch();
         camera = new OrthographicCamera(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         camera.zoom = 1f/15;
-        player = new Player(this);
+        player = new Player(this, new Vector2(0,0));
         entities.add(player);
 
         float g = 3;
@@ -85,22 +90,26 @@ public class World {
 
         collisionBackground = new Texture(img);
 
-        ArrayList<TerrainSection> ts = TerrainUtils.loadFromImage(physicsWorld, img, terrainScale, 0.1f);
+        ArrayList<TerrainSection> ts = TerrainUtils.loadFromImage(this, img, terrainScale, 0.1f);
         for (TerrainSection t : ts) terrain.add(t);
 
         physicsWorld.setContactListener(new ContactListener() {
             @Override
             public void beginContact(Contact contact) {
-                if (contact.getFixtureA().getBody().getUserData() instanceof Player
-                        || contact.getFixtureB().getBody().getUserData() instanceof Player)
-                    player.onCollideGround(contact);
+                GameObject a = (GameObject) contact.getFixtureA().getBody().getUserData();
+                GameObject b = (GameObject) contact.getFixtureB().getBody().getUserData();
+
+                if (a instanceof Entity) ((Entity) a).onBeginContact(contact);
+                if (b instanceof Entity) ((Entity) b).onBeginContact(contact);
             }
 
             @Override
             public void endContact(Contact contact) {
-                if (contact.getFixtureA().getBody().getUserData() instanceof Player
-                        || contact.getFixtureB().getBody().getUserData() instanceof Player)
-                    player.onLeaveGround(contact);
+                GameObject a = (GameObject) contact.getFixtureA().getBody().getUserData();
+                GameObject b = (GameObject) contact.getFixtureB().getBody().getUserData();
+
+                if (a instanceof Entity) ((Entity) a).onEndContact(contact);
+                if (b instanceof Entity) ((Entity) b).onEndContact(contact);
             }
 
             @Override
@@ -112,15 +121,15 @@ public class World {
     }
 
     private void addPlanet(com.badlogic.gdx.physics.box2d.World world, int x, int y, float radius, float mass) {
-        terrain.add(new TerrainSectionSphere(world, x, y, radius, mass));
+        terrain.add(new TerrainSectionSphere(this, x, y, radius, mass));
     }
 
     private void addRectangle(com.badlogic.gdx.physics.box2d.World world, int x, int y, float width, float height, float mass) {
-        terrain.add(new TerrainSectionPolygon(world, x, y, width, height, mass));
+        terrain.add(new TerrainSectionPolygon(this, x, y, width, height, mass));
     }
 
     private void addOneWayPlatform(com.badlogic.gdx.physics.box2d.World world, int x, int y) {
-        terrain.add(new TerrainSectionOneWayGravity(world, x, y, new Vector2[] {
+        terrain.add(new TerrainSectionOneWayGravity(this, x, y, new Vector2[] {
                 new Vector2(0,0),new Vector2(10,0),new Vector2(5,-5),
         }, new Vector2(5,0), 100));
     }
@@ -131,7 +140,7 @@ public class World {
         else camera.zoom = 1f/15;
 
         physicsWorld.step(1/60f, 6, 2);
-        for (Entity e : entities) e.update();
+        for (GameObject e : entities) e.update();
 
         camera.update();
     }
@@ -149,7 +158,7 @@ public class World {
         shapeRenderer.setColor(Color.RED);
         shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
 
-        for (Entity e : entities) e.renderShapes(shapeRenderer);
+        for (GameObject e : entities) e.renderShapes(shapeRenderer);
 
         shapeRenderer.end();
     }
