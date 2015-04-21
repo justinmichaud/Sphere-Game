@@ -136,9 +136,8 @@ public class TerrainUtils {
         return img.getHeight()-y-1;
     }
 
-    private static ArrayList<ArrayList<Vector2>> getPaths(Pixmap img, float scale) {
+    private static ArrayList<ArrayList<Vector2>> getPaths(CollisionImageGraph graph) {
         ArrayList<ArrayList<Vector2>> paths = new ArrayList<ArrayList<Vector2>>();
-        CollisionImageGraph graph = buildGraph(img, scale);
 
         //TODO replace the building of the graph with an implicit graph that directly checks the image for performance
 
@@ -239,13 +238,17 @@ public class TerrainUtils {
         return newPoints;
     }
 
+    public static ArrayList<TerrainSection> getTerrainFromImage(World world, Pixmap img, float scale, float smoothness) {
+        return getTerrainFromGraph(world, buildGraph(img, scale), smoothness);
+    }
+
     //I could probably bake this at runtime to help performance
-    public static ArrayList<TerrainSection> loadFromImage(World world, Pixmap img, float scale, float smoothness) {
+    private static ArrayList<TerrainSection> getTerrainFromGraph(World world, CollisionImageGraph graph, float smoothness) {
         ArrayList<TerrainSection> terrain = new ArrayList<TerrainSection>();
 
         int beforeSize = 0, afterSize = 0;
 
-        for (ArrayList<Vector2> path : getPaths(img, scale)) {
+        for (ArrayList<Vector2> path : getPaths(graph)) {
             beforeSize += path.size();
             ArrayList<Vector2> simplified = simplifyLine(path, smoothness);
             afterSize += simplified.size();
@@ -256,25 +259,106 @@ public class TerrainUtils {
         System.out.println("Collision geometry verts after simplification: " + afterSize);
         System.out.println("Smoothness: " + smoothness + "; Reduction: " + (float)afterSize/beforeSize * 100 + "%");
 
-//        CollisionImageGraph graph = buildGraph(img, scale);
-//
-//        for (Vector2 v : graph.vertices()) {
-//            for (CollisionImageGraph.Edge e : graph.adj(v)) {
-//                Vector2 to = e.other(v);
-//
-//                Vector2 topLeft = (v.x < to.x ? v : to);
-//                Vector2 topRight = (v.x < to.x ? to : v);
-//
-//                Vector2 topEdge = topRight.cpy().sub(topLeft).nor();
-//                Vector2 normal = new Vector2(-topEdge.y, topEdge.x).nor();
-//
-//                Vector2 bottomRight = topRight.cpy().sub(normal.cpy().scl(0.1f));
-//                Vector2 bottomLeft = topLeft.cpy().sub(normal.cpy().scl(0.1f));
-//                terrain.add(new TerrainSectionPolygon(world, 0, 0, new Vector2[] {bottomLeft, bottomRight, topRight, topLeft}, 100));
-//            }
-//
-//        }
-
         return terrain;
+    }
+
+    public static ArrayList<TerrainSection> loadFromMetaballs(World world, boolean[][] scalarField, float scale, float smoothness) {
+        return getTerrainFromGraph(world, buildGraphFromScalarField(scalarField, scale), smoothness);
+    }
+
+    private static CollisionImageGraph buildGraphFromScalarField(boolean[][] scalarField, float scale) {
+        CollisionImageGraph graph = new CollisionImageGraph();
+
+        for (int x=0; x<scalarField.length; x++) {
+            for (int y=0; y<scalarField[x].length; y++) {
+
+                if (isScalarBoundary(x,y,scalarField)) {
+                    Vector2 curr = new Vector2((x)*scale, (scalarField[x].length-(y))*scale);
+
+                    for (int nx = MathUtils.clamp(x-1, 0, scalarField.length-1); nx<= MathUtils.clamp(x+1, 0, scalarField.length-1); nx++) {
+                        for (int ny = MathUtils.clamp(y-1, 0, scalarField[0].length-1); ny<= MathUtils.clamp(y+1, 0, scalarField[0].length-1); ny++) {
+                            if (nx == x && ny == y) continue;
+
+                            if (isScalarBoundary(nx,ny,scalarField)) {
+                                graph.add(curr, new Vector2((nx)*scale, (scalarField[nx].length-(ny))*scale), 1);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return graph;
+    }
+
+    private static boolean isScalarBoundary(int x, int y, boolean[][] field) {
+
+        if (!field[x][y]) return false;
+
+        for (int nx = MathUtils.clamp(x-1, 0, field.length-1); nx<= MathUtils.clamp(x+1, 0, field.length-1); nx++) {
+            for (int ny = MathUtils.clamp(y-1, 0, field[nx].length-1); ny<= MathUtils.clamp(y+1, 0, field[nx].length-1); ny++) {
+                //Ignore diagonals when checking boundaries
+                if (nx == x+1 && ny == y+1 || nx == x-1 && ny == y+1
+                        || nx == x-1 && ny == y-1 || nx == x+1 && ny == y-1) continue;
+                if (nx == x && ny == y) continue;
+
+                if (!field[nx][ny]) return true;
+            }
+        }
+
+        return false;
+    }
+
+    public static boolean[][] generateScalarField(float[] balls, int startX, int startY, int endX, int endY) {
+        boolean[][] values = new boolean[endX-startX][endY-startX];
+
+        for (int x=startX; x<endX; x++) {
+            for (int y=startY; y<endY; y++) {
+                boolean value = getValueAt(x,y,balls);
+
+                values[x-startX][y-startY] = value;
+            }
+        }
+
+        return values;
+    }
+
+    public static float[] getBalls() {
+        float[] blobs = new float[50*3];
+
+        int width = 2000, height = 2000;
+
+        for (int i=0; i<blobs.length; i+=3) {
+
+            float x = (float) Math.random()*width;
+            float y = (float) Math.random()*height;
+            float r = (float) Math.random()*300 + 60;
+
+            blobs[i] = MathUtils.clamp(x, r, width-r);
+            blobs[i+1] = MathUtils.clamp(y, r, height-r);
+            blobs[i+2] = r;
+        }
+
+        return blobs;
+    }
+
+    private static boolean getValueAt(int x, int y, float[] balls) {
+        float value = 0;
+        float g = 3;
+        int threshold = 5;
+
+        for (int i=0; i<balls.length; i+=3) {
+            float bx = balls[i];
+            float by = balls[i+1];
+            float br = balls[i+2];
+
+            if ((bx-x)*(bx-x) + (by-y)*(by-y) > (br + 1000)*(br + 1000)) continue;
+
+            value += Math.pow(br, g) / Math.pow(Math.sqrt((bx - x)*(bx-x) + (by-y)*(by-y)), g);
+            if (value > threshold) break;
+        }
+
+        if (value > threshold) return true;
+        else return false;
     }
 }

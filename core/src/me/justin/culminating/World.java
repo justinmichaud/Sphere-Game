@@ -8,7 +8,6 @@ import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
 import com.badlogic.gdx.physics.box2d.Contact;
@@ -59,52 +58,26 @@ public class World {
         entities.add(player);
 
         float g = 3;
-        float[] blobs = new float[50*3];
+        float[] balls = TerrainUtils.getBalls();
 
-        int width = 5000, height = 2000;
-
-        for (int i=0; i<blobs.length; i+=3) {
-
-            float x = (float) Math.random()*width;
-            float y = (float) Math.random()*height;
-            float r = (float) Math.random()*300 + 60;
-
-            blobs[i] = MathUtils.clamp(x, r, width-r);
-            blobs[i+1] = MathUtils.clamp(y, r, height-r);
-            blobs[i+2] = r;
-        }
+        int width = 2000, height = 2000;
+        boolean[][] field = TerrainUtils.generateScalarField(balls, 0, 0, width, height);
+        System.out.println("Done generating blobs & scalar field");
 
         Pixmap img = new Pixmap(width,height, Pixmap.Format.RGBA8888);
 
-        for (int x=0; x<img.getWidth(); x++) {
-            for (int y=0; y<img.getHeight(); y++) {
-                float value = 0;
-
-                for (int i=0; i<blobs.length; i+=3) {
-                    float bx = blobs[i];
-                    float by = blobs[i+1];
-                    float br = blobs[i+2];
-
-                    if ((bx-x)*(bx-x) + (by-y)*(by-y) > (br + 1000)*(br + 1000)) continue;
-
-                    value += Math.pow(br, g) / Math.pow(Math.sqrt((bx - x)*(bx-x) + (by-y)*(by-y)), g);
-                }
-
-                if (value > 5) value = 0;
-                else value = 1;
-
-                value = MathUtils.clamp(value, 0, 1);
-                img.drawPixel(x,y,Color.rgba8888(value,value,value,1));
+        for (int x=0; x<width; x++) {
+            for (int y=0; y<height; y++) {
+                if (field[x][y]) img.drawPixel(x,y,Color.rgba8888(0,0,0,1));
+                else img.drawPixel(x,y,Color.rgba8888(1, 1, 1, 1));
             }
         }
-
-        System.out.println("Done generating blobs");
 
         collisionBackground = new Texture(img);
 
         System.out.println("Done loading blobs texture");
 
-        ArrayList<TerrainSection> ts = TerrainUtils.loadFromImage(this, img, terrainScale, 0.1f);
+        ArrayList<TerrainSection> ts = TerrainUtils.loadFromMetaballs(this, field, terrainScale, 0.1f);
         for (TerrainSection t : ts) terrain.add(t);
 
         System.out.println("Done generating collision geometry");
