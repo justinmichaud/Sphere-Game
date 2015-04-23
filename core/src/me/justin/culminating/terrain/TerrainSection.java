@@ -1,4 +1,4 @@
-package me.justin.culminating.entities;
+package me.justin.culminating.terrain;
 
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;

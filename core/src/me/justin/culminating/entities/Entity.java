@@ -5,12 +5,12 @@ import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.CircleShape;
 import com.badlogic.gdx.physics.box2d.Contact;
-import com.badlogic.gdx.physics.box2d.Fixture;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 
 import java.util.ArrayList;
 
 import me.justin.culminating.World;
+import me.justin.culminating.terrain.TerrainSection;
 
 /**
  * Created by justin on 20/04/15.

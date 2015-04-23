@@ -7,6 +7,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 
 import me.justin.culminating.World;
+import me.justin.culminating.terrain.TerrainSection;
 
 public class Player extends Entity {
 

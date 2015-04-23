@@ -1,4 +1,4 @@
-package me.justin.culminating.entities;
+package me.justin.culminating.terrain;
 
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
@@ -53,6 +53,6 @@ public class TerrainSectionSphere extends TerrainSection {
 
     @Override
     public void renderShapes(ShapeRenderer renderer) {
-
+        renderer.circle(position.x, position.y, radius);
     }
 }

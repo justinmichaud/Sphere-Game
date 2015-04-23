@@ -1,4 +1,4 @@
-package me.justin.culminating.entities;
+package me.justin.culminating.terrain;
 
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
@@ -97,6 +97,14 @@ public class TerrainSectionPolygon extends TerrainSection {
 
     @Override
     public void renderShapes(ShapeRenderer renderer) {
+        Vector2[] verts = getVertices();
+        float[] vertsFloat = new float[verts.length*2];
 
+        for (int i=0; i<verts.length; i++) {
+            vertsFloat[i*2] = verts[i].x;
+            vertsFloat[i*2+1] = verts[i].y;
+        }
+
+        renderer.polygon(vertsFloat);
     }
 }

@@ -12,33 +12,14 @@ import java.util.LinkedList;
 import java.util.Set;
 import java.util.Stack;
 
-import me.justin.culminating.entities.TerrainSection;
-import me.justin.culminating.entities.TerrainSectionPolygon;
+import me.justin.culminating.terrain.TerrainSection;
+import me.justin.culminating.terrain.TerrainSectionPath;
+import me.justin.culminating.terrain.TerrainSectionPolygon;
 
 /**
  * Created by justin on 05/04/15.
  */
 public class TerrainUtils {
-
-    //Pairs of vertices will be extruded downwards if they are in order of left to right
-    public static TerrainSection[] generatePath(World world, Vector2[] points, float thickness, float x, float y, float mass) {
-        TerrainSection[] path = new TerrainSection[points.length-1];
-
-        for (int i=0; i<points.length-1; i++) {
-            Vector2 topLeft = points[i];
-            Vector2 topRight = points[i+1];
-
-            Vector2 topEdge = topRight.cpy().sub(topLeft);
-            Vector2 normal = new Vector2(-topEdge.y, topEdge.x).nor();
-
-            Vector2 bottomRight = topRight.cpy().sub(normal.cpy().scl(thickness));
-            Vector2 bottomLeft = topLeft.cpy().sub(normal.cpy().scl(thickness));
-
-            path[i] = new TerrainSectionPolygon(world, x, y, new Vector2[] {bottomLeft, bottomRight, topRight, topLeft}, mass);
-        }
-
-        return path;
-    }
 
     //Digraph representing the boundary pixels
     private static class CollisionImageGraph {
@@ -252,7 +233,7 @@ public class TerrainUtils {
             beforeSize += path.size();
             ArrayList<Vector2> simplified = simplifyLine(path, smoothness);
             afterSize += simplified.size();
-            Collections.addAll(terrain, generatePath(world, simplified.toArray(new Vector2[simplified.size()]), 0.1f, 0, 0, 100));
+            terrain.add(new TerrainSectionPath(world, 0, 0, simplified.toArray(new Vector2[simplified.size()]), 0.1f, 100));
         }
 
         System.out.println("Collision geometry verts before simplification: " + beforeSize);

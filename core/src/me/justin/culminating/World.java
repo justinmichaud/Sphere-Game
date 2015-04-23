@@ -4,8 +4,6 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.Pixmap;
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
@@ -20,10 +18,11 @@ import java.util.ArrayList;
 import me.justin.culminating.entities.Entity;
 import me.justin.culminating.entities.GameObject;
 import me.justin.culminating.entities.Player;
-import me.justin.culminating.entities.TerrainSection;
-import me.justin.culminating.entities.TerrainSectionOneWayGravity;
-import me.justin.culminating.entities.TerrainSectionPolygon;
-import me.justin.culminating.entities.TerrainSectionSphere;
+import me.justin.culminating.terrain.TerrainSection;
+import me.justin.culminating.terrain.TerrainSectionOneWayGravity;
+import me.justin.culminating.terrain.TerrainSectionPath;
+import me.justin.culminating.terrain.TerrainSectionPolygon;
+import me.justin.culminating.terrain.TerrainSectionSphere;
 
 /**
  * Created by justin on 16/04/15.
@@ -33,7 +32,7 @@ public class World {
     public Player player;
     public com.badlogic.gdx.physics.box2d.World physicsWorld;
 
-    public ArrayList<GameObject> entities = new ArrayList<GameObject>();
+    public ArrayList<GameObject> gameObjects = new ArrayList<GameObject>();
 
     private Box2DDebugRenderer b2Renderer;
     private ShapeRenderer shapeRenderer;
@@ -42,8 +41,6 @@ public class World {
     public OrthographicCamera camera;
 
     private float terrainScale = 0.055f;
-
-    private Texture collisionBackground;
 
     public ArrayList<TerrainSection> terrain = new ArrayList<TerrainSection>();
 
@@ -55,30 +52,20 @@ public class World {
         camera = new OrthographicCamera(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         camera.zoom = 1f/15;
         player = new Player(this, new Vector2(0,0));
-        entities.add(player);
+        gameObjects.add(player);
 
         float g = 3;
         float[] balls = TerrainUtils.getBalls();
 
-        int width = 2000, height = 2000;
+        int width = 5000, height = 5000;
         boolean[][] field = TerrainUtils.generateScalarField(balls, 0, 0, width, height);
         System.out.println("Done generating blobs & scalar field");
 
-        Pixmap img = new Pixmap(width,height, Pixmap.Format.RGBA8888);
-
-        for (int x=0; x<width; x++) {
-            for (int y=0; y<height; y++) {
-                if (field[x][y]) img.drawPixel(x,y,Color.rgba8888(0,0,0,1));
-                else img.drawPixel(x,y,Color.rgba8888(1, 1, 1, 1));
-            }
-        }
-
-        collisionBackground = new Texture(img);
-
-        System.out.println("Done loading blobs texture");
-
         ArrayList<TerrainSection> ts = TerrainUtils.loadFromMetaballs(this, field, terrainScale, 0.1f);
-        for (TerrainSection t : ts) terrain.add(t);
+        for (TerrainSection t : ts) {
+            terrain.add(t);
+            gameObjects.add(t);
+        }
 
         System.out.println("Done generating collision geometry");
 
@@ -126,42 +113,55 @@ public class World {
     public void update() {
 
         if (Gdx.input.isKeyPressed(Input.Keys.Z)) camera.zoom = 1f/50;
+        else if (Gdx.input.isKeyPressed(Input.Keys.X)) camera.zoom = 2;
         else camera.zoom = 1f/15;
 
         physicsWorld.step(1/60f, 6, 2);
-        for (GameObject e : entities) e.update();
+        for (GameObject e : gameObjects) e.update();
 
         camera.update();
     }
 
     public void render() {
-        spriteRenderer.begin();
-        spriteRenderer.setProjectionMatrix(camera.combined);
-        spriteRenderer.draw(collisionBackground, 0, 0, collisionBackground.getWidth() * terrainScale,
-                collisionBackground.getHeight() * terrainScale);
-        spriteRenderer.end();
+        if (Gdx.input.isKeyPressed(Input.Keys.B)) {
+            b2Renderer.render(physicsWorld, camera.combined);
+        }
+        else {
+            spriteRenderer.begin();
+            spriteRenderer.setProjectionMatrix(camera.combined);
+            //spriteRenderer.draw(collisionBackground, 0, 0, collisionBackground.getWidth() * terrainScale,
+            //        collisionBackground.getHeight() * terrainScale);
+            spriteRenderer.end();
 
-        if (Gdx.input.isKeyPressed(Input.Keys.B)) b2Renderer.render(physicsWorld, camera.combined);
+            shapeRenderer.setProjectionMatrix(camera.combined);
+            shapeRenderer.setColor(Color.RED);
+            shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
 
-        shapeRenderer.setProjectionMatrix(camera.combined);
-        shapeRenderer.setColor(Color.RED);
-        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+            for (GameObject e : gameObjects) e.renderShapes(shapeRenderer);
 
-        for (GameObject e : entities) e.renderShapes(shapeRenderer);
-
-        shapeRenderer.end();
+            shapeRenderer.end();
+        }
     }
 
 
     //Claculate the weighted average of gravity directions
     public Vector2 calculateGravityDirection(Vector2 position, Iterable<TerrainSection> terrain) {
         Vector2 gravity = new Vector2();
-        TerrainSection closest = null;
 
         for (TerrainSection s : terrain) {
-            float dist = s.getDistance(position);
-            if (dist < 500)
-                gravity.add(s.getGravityDirection(position).scl(1f / (dist * dist) * s.mass));
+            //TODO clean this up
+            if (s instanceof TerrainSectionPath) {
+                for (TerrainSection ss : ((TerrainSectionPath) s).children) {
+                    float dist = ss.getDistance(position);
+                    if (dist < 500)
+                        gravity.add(ss.getGravityDirection(position).scl(1f / (dist * dist) * s.mass));
+                }
+            }
+            else {
+                float dist = s.getDistance(position);
+                if (dist < 500)
+                    gravity.add(s.getGravityDirection(position).scl(1f / (dist * dist) * s.mass));
+            }
         }
 
         return gravity.nor();
