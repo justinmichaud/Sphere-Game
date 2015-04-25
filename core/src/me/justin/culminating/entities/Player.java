@@ -17,6 +17,10 @@ public class Player extends Entity {
 
     private PlayerState state = PlayerState.FALLING;
 
+    //We keep track of how long they have stopped pressing the button for
+    //to avoid missed keyboard events
+    private int jumpReleased = -1;
+
     public Player(World world, Vector2 position) {
         super(world, position);
     }
@@ -34,14 +38,20 @@ public class Player extends Entity {
         else if (Gdx.input.isKeyPressed(Input.Keys.D)) forceX = 500;
         else forceX = 0;
 
-        if (state == PlayerState.WALKING && Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
+        if (state == PlayerState.WALKING && Gdx.input.isKeyPressed(Input.Keys.SPACE) && jumpReleased == -1) {
             forceY = -3000;
             state = PlayerState.JUMPING;
+            jumpReleased = 0;
         }
 
         //Bring them back sooner if they stop holding the button for variable jump heights
         if (state == PlayerState.JUMPING && !Gdx.input.isKeyPressed(Input.Keys.SPACE)) {
             forceY += 100;
+        }
+
+        if (!Gdx.input.isKeyPressed(Input.Keys.SPACE) && jumpReleased != -1) {
+            jumpReleased++;
+            if (jumpReleased > 10) jumpReleased = -1; //After 10 frames of it being released, they can jump again
         }
 
         applyLocalForce(forceX, forceY, gravity);
