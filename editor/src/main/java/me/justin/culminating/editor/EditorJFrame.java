@@ -1,5 +1,6 @@
 package me.justin.culminating.editor;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.backends.lwjgl.LwjglAWTCanvas;
 import com.badlogic.gdx.scenes.scene2d.utils.UIUtils;
 
@@ -19,6 +20,7 @@ import javax.swing.UIDefaults;
 import javax.swing.UIManager;
 
 import me.justin.culminating.CulminatingGame;
+import me.justin.culminating.Input;
 
 /**
  * Created by justin on 25/04/15.
@@ -43,7 +45,7 @@ public class EditorJFrame extends JFrame {
 
         Container container = getContentPane();
 
-        game = new CulminatingGame();
+        game = new CulminatingGame(new Input.DefaultInput());
         lwjglAWTCanvas = new LwjglAWTCanvas(game);
         Canvas canvas = lwjglAWTCanvas.getCanvas();
 

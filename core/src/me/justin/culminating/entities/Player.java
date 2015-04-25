@@ -34,22 +34,22 @@ public class Player extends Entity {
         if (state == PlayerState.WALKING) forceY = 1000; //Stick to the ground when they move across the planet
         else forceY = 80;
 
-        if (Gdx.input.isKeyPressed(Input.Keys.A)) forceX = -500;
-        else if (Gdx.input.isKeyPressed(Input.Keys.D)) forceX = 500;
+        if (world.input.isLeftPressed()) forceX = -500;
+        else if (world.input.isRightPressed()) forceX = 500;
         else forceX = 0;
 
-        if (state == PlayerState.WALKING && Gdx.input.isKeyPressed(Input.Keys.SPACE) && jumpReleased == -1) {
+        if (state == PlayerState.WALKING && world.input.isJumpPressed() && jumpReleased == -1) {
             forceY = -3000;
             state = PlayerState.JUMPING;
             jumpReleased = 0;
         }
 
         //Bring them back sooner if they stop holding the button for variable jump heights
-        if (state == PlayerState.JUMPING && !Gdx.input.isKeyPressed(Input.Keys.SPACE)) {
+        if (state == PlayerState.JUMPING && !world.input.isJumpPressed()) {
             forceY += 100;
         }
 
-        if (!Gdx.input.isKeyPressed(Input.Keys.SPACE) && jumpReleased != -1) {
+        if (!world.input.isJumpPressed() && jumpReleased != -1) {
             jumpReleased++;
             if (jumpReleased > 10) jumpReleased = -1; //After 10 frames of it being released, they can jump again
         }

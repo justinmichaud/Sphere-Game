@@ -3,10 +3,11 @@ package me.justin.culminating.desktop;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplication;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
 import me.justin.culminating.CulminatingGame;
+import me.justin.culminating.Input;
 
 public class DesktopLauncher {
 	public static void main (String[] arg) {
 		LwjglApplicationConfiguration config = new LwjglApplicationConfiguration();
-		new LwjglApplication(new CulminatingGame(), config);
+		new LwjglApplication(new CulminatingGame(new Input.DefaultInput()), config);
 	}
 }

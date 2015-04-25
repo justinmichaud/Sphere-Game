@@ -8,13 +8,18 @@ import com.badlogic.gdx.math.Vector2;
 public class CulminatingGame extends ApplicationAdapter {
 
     public World world;
+    public Input input;
+
+    public CulminatingGame(Input input) {
+        this.input = input;
+    }
 
     private float totalFrameTime = 0;
     private int frames = 0;
 	
 	@Override
 	public void create () {
-		world = new World();
+		world = new World(input);
 	}
 
 	@Override

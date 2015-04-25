@@ -1,7 +1,6 @@
 package me.justin.culminating;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -31,6 +30,7 @@ public class World {
 
     public Player player;
     public com.badlogic.gdx.physics.box2d.World physicsWorld;
+    public Input input;
 
     public ArrayList<GameObject> gameObjects = new ArrayList<GameObject>();
 
@@ -44,7 +44,9 @@ public class World {
 
     public ArrayList<TerrainSection> terrain = new ArrayList<TerrainSection>();
 
-    public World() {
+    public World(Input input) {
+        this.input = input;
+
         physicsWorld = new com.badlogic.gdx.physics.box2d.World(new Vector2(0, 0), true);
         b2Renderer = new Box2DDebugRenderer(true, false, false, false, false, false);
         shapeRenderer = new ShapeRenderer();
@@ -112,8 +114,8 @@ public class World {
 
     public void update() {
 
-        if (Gdx.input.isKeyPressed(Input.Keys.Z)) camera.zoom = 1f/50;
-        else if (Gdx.input.isKeyPressed(Input.Keys.X)) camera.zoom = 2;
+        if (input.isZoomInPressed()) camera.zoom = 1f/50;
+        else if (input.isZoomOutPressed()) camera.zoom = 2;
         else camera.zoom = 1f/15;
 
         physicsWorld.step(1/60f, 6, 2);
@@ -123,7 +125,7 @@ public class World {
     }
 
     public void render() {
-        if (Gdx.input.isKeyPressed(Input.Keys.B)) {
+        if (input.isDebugPressed()) {
             b2Renderer.render(physicsWorld, camera.combined);
         }
         else {

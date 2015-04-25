@@ -6,6 +6,7 @@ import com.badlogic.gdx.backends.gwt.GwtApplicationConfiguration;
 import com.google.gwt.user.client.Window;
 
 import me.justin.culminating.CulminatingGame;
+import me.justin.culminating.Input;
 
 public class HtmlLauncher extends GwtApplication {
 
@@ -16,6 +17,6 @@ public class HtmlLauncher extends GwtApplication {
 
         @Override
         public ApplicationListener getApplicationListener () {
-                return new CulminatingGame();
+                return new CulminatingGame(new Input.DefaultInput());
         }
 }
