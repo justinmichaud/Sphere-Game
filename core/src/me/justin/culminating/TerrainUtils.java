@@ -305,9 +305,9 @@ public class TerrainUtils {
     }
 
     public static float[] getBalls() {
-        float[] blobs = new float[50*3];
+        float[] blobs = new float[4*3];
 
-        int width = 2000, height = 2000;
+        int width = 1000, height = 1000;
 
         for (int i=0; i<blobs.length; i+=3) {
 
