@@ -16,11 +16,13 @@ import java.awt.event.WindowEvent;
 import java.beans.PropertyChangeListener;
 
 import javax.swing.Action;
+import javax.swing.BoxLayout;
 import javax.swing.InputMap;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.KeyStroke;
 import javax.swing.LookAndFeel;
@@ -53,6 +55,7 @@ public class EditorJFrame extends JFrame {
     private EditorApplication game;
     private LwjglAWTCanvas lwjglAWTCanvas;
     private EditorPropertiesComponent editorPropertiesComponent;
+    private EditorPaletteComponent paletteComponent;
 
 // https://github.com/libgdx/libgdx/blob/master/tests/gdx-tests-lwjgl/src/com/badlogic/gdx/tests/lwjgl/SwingLwjglTest.java
     public EditorJFrame() {
@@ -82,7 +85,13 @@ public class EditorJFrame extends JFrame {
         container.add(canvas, BorderLayout.CENTER);
 
         editorPropertiesComponent = new EditorPropertiesComponent();
-        container.add(editorPropertiesComponent, BorderLayout.EAST);
+        paletteComponent = new EditorPaletteComponent();
+
+        JPanel sidebar = new JPanel();
+        sidebar.setLayout(new BoxLayout(sidebar, BoxLayout.Y_AXIS));
+        sidebar.add(paletteComponent);
+        sidebar.add(editorPropertiesComponent);
+        container.add(sidebar, BorderLayout.EAST);
 
         pack();
         setSize(800, 600);
