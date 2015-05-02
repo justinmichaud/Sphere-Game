@@ -4,16 +4,39 @@ import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
 
+import java.util.ArrayList;
+
+import javax.swing.JOptionPane;
+
 import me.justin.culminating.Input;
 import me.justin.culminating.World;
+import me.justin.culminating.entities.GameObject;
 
 /**
  * Created by justin on 25/04/15.
  */
 public class EditorApplication extends ApplicationAdapter {
+    //The possible editor states (editing terrain or editing entities)
+    public static enum State {
+        TERRAIN, ENTITY
+    }
+
+    public static interface StateChangeListener {
+        public void onStateChange(EditorApplication app, State current, State next);
+    }
+
+    public static interface SelectedChangeListener {
+        public void onStateChange(EditorApplication app, GameObject current, GameObject next);
+    }
 
     public World world;
     public Input input;
+
+    private State state = State.TERRAIN;
+    private ArrayList<StateChangeListener> stateChangeListeners = new ArrayList<>();
+
+    private GameObject currentlySelected = null;
+    private ArrayList<SelectedChangeListener> selectedChangeListeners = new ArrayList<>();
 
     public EditorApplication(Input input) {
         this.input = input;
@@ -44,4 +67,42 @@ public class EditorApplication extends ApplicationAdapter {
             totalFrameTime = 0;
         }
     }
+
+    public void addStateChangeListener(StateChangeListener listener) {
+        stateChangeListeners.add(listener);
+    }
+
+    public State getState() {
+        return state;
+    }
+
+    public void setState(State state) {
+        for (StateChangeListener l : stateChangeListeners)
+            l.onStateChange(this, this.state, state);
+        this.state = state;
+    }
+
+    public void addSelectedChangeListener(SelectedChangeListener listener) {
+        selectedChangeListeners.add(listener);
+    }
+
+    public GameObject getCurrentlySelected() {
+        return currentlySelected;
+    }
+
+    public void setCurrentlySelected(GameObject currentlySelected) {
+        for (SelectedChangeListener l : selectedChangeListeners)
+            l.onStateChange(this, this.currentlySelected, currentlySelected);
+        this.currentlySelected = currentlySelected;
+    }
+
+    public void onAddEntityClicked(String type) {
+        if (type == null || type.isEmpty()) return;
+        System.out.println("Not Implemented");
+    }
+
+    public void onAddMetaballClicked() {
+        System.out.println("Not Implemented");
+    }
+
 }

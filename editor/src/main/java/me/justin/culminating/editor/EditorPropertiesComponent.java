@@ -14,6 +14,8 @@ import javax.swing.JTable;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.TableModel;
 
+import me.justin.culminating.entities.GameObject;
+
 /**
  * Created by justin on 26/04/15.
  */
@@ -22,11 +24,20 @@ public class EditorPropertiesComponent extends JPanel {
     private JTable table;
     private JLabel emptyLabel;
 
-    public EditorPropertiesComponent() {
+    public EditorPropertiesComponent(EditorApplication editor) {
         table = new JTable();
         emptyLabel = new JLabel("No Object Selected");
         add(table);
         add(emptyLabel);
+
+        editor.addSelectedChangeListener(new EditorApplication.SelectedChangeListener() {
+            @Override
+            public void onStateChange(EditorApplication app, GameObject current, GameObject next) {
+                if (next == null) setEmptyObject();
+                else changeObject(next);
+            }
+        });
+
         setEmptyObject();
     }
 
