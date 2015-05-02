@@ -32,7 +32,7 @@ public class EditorPropertiesComponent extends JPanel {
 
         editor.addSelectedChangeListener(new EditorApplication.SelectedChangeListener() {
             @Override
-            public void onStateChange(EditorApplication app, GameObject current, GameObject next) {
+            public void onStateChange(EditorApplication app, Object current, Object next) {
                 if (next == null) setEmptyObject();
                 else changeObject(next);
             }

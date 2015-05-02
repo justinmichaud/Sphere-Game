@@ -3,6 +3,7 @@ package me.justin.culminating.editor;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.math.Circle;
 
 import java.util.ArrayList;
 
@@ -26,16 +27,15 @@ public class EditorApplication extends ApplicationAdapter {
     }
 
     public static interface SelectedChangeListener {
-        public void onStateChange(EditorApplication app, GameObject current, GameObject next);
+        public void onStateChange(EditorApplication app, Object current, Object next);
     }
 
-    public World world;
     public Input input;
 
     private State state = State.TERRAIN;
     private ArrayList<StateChangeListener> stateChangeListeners = new ArrayList<>();
 
-    private GameObject currentlySelected = null;
+    private Object currentlySelected = null;
     private ArrayList<SelectedChangeListener> selectedChangeListeners = new ArrayList<>();
 
     public EditorApplication(Input input) {
@@ -45,10 +45,11 @@ public class EditorApplication extends ApplicationAdapter {
     private float totalFrameTime = 0;
     private int frames = 0;
 
+    private Level level;
+
     @Override
     public void create () {
-        world = new World(input);
-        world.update();
+        level = new Level(this);
     }
 
     @Override
@@ -57,7 +58,12 @@ public class EditorApplication extends ApplicationAdapter {
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-        world.render();
+        if (state == State.TERRAIN) {
+            level.renderMetaballs();
+        }
+        else if (state == State.ENTITY) {
+
+        }
 
         frames++;
         totalFrameTime += Gdx.graphics.getDeltaTime();
@@ -86,11 +92,11 @@ public class EditorApplication extends ApplicationAdapter {
         selectedChangeListeners.add(listener);
     }
 
-    public GameObject getCurrentlySelected() {
+    public Object getCurrentlySelected() {
         return currentlySelected;
     }
 
-    public void setCurrentlySelected(GameObject currentlySelected) {
+    public void setCurrentlySelected(Object currentlySelected) {
         for (SelectedChangeListener l : selectedChangeListeners)
             l.onStateChange(this, this.currentlySelected, currentlySelected);
         this.currentlySelected = currentlySelected;
@@ -102,7 +108,9 @@ public class EditorApplication extends ApplicationAdapter {
     }
 
     public void onAddMetaballClicked() {
-        System.out.println("Not Implemented");
+        Metaball newBall = new Metaball();
+        level.metaballs.add(newBall);
+        setCurrentlySelected(newBall);
     }
 
 }
