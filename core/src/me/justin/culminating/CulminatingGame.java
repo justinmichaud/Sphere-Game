@@ -12,7 +12,6 @@ public class CulminatingGame extends ApplicationAdapter {
 
     public CulminatingGame(Input input) {
         this.input = input;
-        input.init();
     }
 
     private float totalFrameTime = 0;
@@ -21,7 +20,8 @@ public class CulminatingGame extends ApplicationAdapter {
 	@Override
 	public void create () {
 		world = new World(input);
-	}
+        input.init();
+    }
 
 	@Override
 	public void render () {
