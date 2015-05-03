@@ -18,6 +18,8 @@ public abstract class Input {
 
     public abstract boolean isLeftPressed();
     public abstract boolean isRightPressed();
+    public abstract boolean isUpPressed();
+    public abstract boolean isDownPressed();
     public abstract boolean isJumpPressed();
     public abstract boolean isZoomInPressed();
     public abstract boolean isZoomOutPressed();
@@ -32,9 +34,11 @@ public abstract class Input {
     public abstract boolean isPendingTouchEvent();
     public abstract Vector2 getTouchLocation();
 
+    public abstract int getZoom();
+
     public static class DefaultInput extends Input implements InputProcessor {
 
-        private int scrollPosition = 0;
+        private int scrollPosition = 1;
         private boolean pendingTouch = false, touchDown = false;
 
         @Override
@@ -50,6 +54,16 @@ public abstract class Input {
         @Override
         public boolean isRightPressed() {
             return Gdx.input.isKeyPressed(com.badlogic.gdx.Input.Keys.D);
+        }
+
+        @Override
+        public boolean isUpPressed() {
+            return Gdx.input.isKeyPressed(com.badlogic.gdx.Input.Keys.W);
+        }
+
+        @Override
+        public boolean isDownPressed() {
+            return Gdx.input.isKeyPressed(com.badlogic.gdx.Input.Keys.S);
         }
 
         @Override
@@ -116,6 +130,11 @@ public abstract class Input {
         }
 
         @Override
+        public int getZoom() {
+            return scrollPosition;
+        }
+
+        @Override
         public boolean keyDown(int keycode) {
             return false;
         }
@@ -158,7 +177,9 @@ public abstract class Input {
 
         @Override
         public boolean scrolled(int amount) {
-            scrollPosition += amount;
+            scrollPosition -= amount;
+            if (scrollPosition <=1) scrollPosition = 1;
+            if (scrollPosition >= 20) scrollPosition = 20;
             return true;
         }
     }

@@ -55,6 +55,12 @@ public class EditorApplication extends ApplicationAdapter {
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
+        level.camera.zoom = 1f/input.getZoom();
+        if (input.isLeftPressed()) level.camera.position.x -= 1;
+        if (input.isRightPressed()) level.camera.position.x += 1;
+        if (input.isUpPressed()) level.camera.position.y += 1;
+        if (input.isDownPressed()) level.camera.position.y -= 1;
+
         if (state == State.TERRAIN) {
             renderTerrain();
         }

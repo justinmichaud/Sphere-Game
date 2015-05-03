@@ -41,6 +41,11 @@ public class Level {
 
             shapeRenderer.circle(m.x, m.y, m.radius);
         }
+
+        //player zoom marker
+        shapeRenderer.setColor(Color.WHITE);
+        shapeRenderer.circle(camera.position.x - camera.viewportWidth*camera.zoom/2f + 1,
+                camera.position.y - camera.viewportHeight*camera.zoom/2f + 1, 1, 30);
         shapeRenderer.end();
     }
 
