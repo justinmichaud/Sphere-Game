@@ -42,6 +42,7 @@ public class EditorToolbarComponent extends JToolBar {
                     currentStateLabel.setText(EditorToolbarComponent.this.editor.getState().toString());
                 }
             };
+            if (editor.getState() == state) btn.setEnabled(false);
             btn.addActionListener(action);
             btn.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("F" + currentKeybinding++), state.toString());
             btn.getActionMap().put(state.toString(), action);
@@ -54,6 +55,7 @@ public class EditorToolbarComponent extends JToolBar {
         Action createAction = new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
+                if (editor.getState() != EditorApplication.State.ENTITY) return;
                 EditorToolbarComponent.this.editor.onAddEntityClicked(
                         JOptionPane.showInputDialog(jFrame,"Enter Class Name","Add Entity", JOptionPane.PLAIN_MESSAGE)
                 );
@@ -68,6 +70,7 @@ public class EditorToolbarComponent extends JToolBar {
         Action createMetaballAction = new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
+                if (editor.getState() != EditorApplication.State.TERRAIN) return;
                 editor.onAddMetaballClicked();
             }
         };

@@ -12,6 +12,7 @@ public class CulminatingGame extends ApplicationAdapter {
 
     public CulminatingGame(Input input) {
         this.input = input;
+        input.init();
     }
 
     private float totalFrameTime = 0;

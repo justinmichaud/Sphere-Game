@@ -30,9 +30,15 @@ public class Level {
 
     public void renderMetaballs() {
         camera.update();
-        shapeRenderer.setColor(Color.RED);
+        shapeRenderer.setProjectionMatrix(camera.combined);
         shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
         for (Metaball m : metaballs) {
+            if (editor.getCurrentlySelected() != null
+                    && editor.getCurrentlySelected().equals(m))
+                shapeRenderer.setColor(Color.GREEN);
+            else
+                shapeRenderer.setColor(Color.RED);
+
             shapeRenderer.circle(m.x, m.y, m.radius);
         }
         shapeRenderer.end();

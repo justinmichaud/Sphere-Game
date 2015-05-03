@@ -3,15 +3,11 @@ package me.justin.culminating.editor;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.math.Circle;
+import com.badlogic.gdx.math.Vector3;
 
 import java.util.ArrayList;
 
-import javax.swing.JOptionPane;
-
 import me.justin.culminating.Input;
-import me.justin.culminating.World;
-import me.justin.culminating.entities.GameObject;
 
 /**
  * Created by justin on 25/04/15.
@@ -49,6 +45,7 @@ public class EditorApplication extends ApplicationAdapter {
 
     @Override
     public void create () {
+        input.init();
         level = new Level(this);
     }
 
@@ -59,7 +56,7 @@ public class EditorApplication extends ApplicationAdapter {
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
         if (state == State.TERRAIN) {
-            level.renderMetaballs();
+            renderTerrain();
         }
         else if (state == State.ENTITY) {
 
@@ -72,6 +69,38 @@ public class EditorApplication extends ApplicationAdapter {
             frames = 0;
             totalFrameTime = 0;
         }
+    }
+
+    private void renderTerrain() {
+
+        if (currentlySelected instanceof Metaball) {
+            Metaball currentBall = (Metaball) currentlySelected;
+
+            if (input.isArrowLeftPressed()) currentBall.x -= 1;
+            if (input.isArrowRightPressed()) currentBall.x += 1;
+            if (input.isArrowUpPressed()) currentBall.y += 1;
+            if (input.isArrowDownPressed()) currentBall.y -= 1;
+            if (input.isIncreaseScalePressed()) currentBall.radius += 1;
+            if (input.isDecreaseScalePressed()) currentBall.radius -= 1;
+        }
+        else currentlySelected = null;
+
+        //handle selection
+        if (input.isPendingTouchEvent()) {
+            System.out.println("Touched");
+            Vector3 worldLocation = level.camera.unproject(new Vector3(input.getTouchLocation(), 0));
+
+            Metaball closest = null;
+            for (Metaball m : level.metaballs) {
+                if (closest == null || Math.abs(worldLocation.dst(m.x, m.y, 0) - m.radius)
+                        < Math.abs(worldLocation.dst(closest.x, closest.y, 0) - closest.radius))
+                    closest = m;
+            }
+
+            setCurrentlySelected(closest);
+        }
+
+        level.renderMetaballs();
     }
 
     public void addStateChangeListener(StateChangeListener listener) {
