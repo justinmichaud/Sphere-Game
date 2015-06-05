@@ -12,6 +12,7 @@ import java.util.LinkedList;
 import java.util.Set;
 import java.util.Stack;
 
+import me.justin.culminating.terrain.Metaball;
 import me.justin.culminating.terrain.TerrainSection;
 import me.justin.culminating.terrain.TerrainSectionPath;
 import me.justin.culminating.terrain.TerrainSectionPolygon;
@@ -290,12 +291,12 @@ public class TerrainUtils {
         return false;
     }
 
-    public static boolean[][] generateScalarField(float[] balls, int startX, int startY, int endX, int endY) {
+    public static boolean[][] generateScalarField(Metaball[] balls, int startX, int startY, int endX, int endY, float scale) {
         boolean[][] values = new boolean[endX-startX][endY-startX];
 
         for (int x=startX; x<endX; x++) {
             for (int y=startY; y<endY; y++) {
-                boolean value = getValueAt(x,y,balls);
+                boolean value = getValueAt(x*scale,y*scale,balls);
 
                 values[x-startX][y-startY] = value;
             }
@@ -304,38 +305,34 @@ public class TerrainUtils {
         return values;
     }
 
-    public static float[] getBalls() {
-        float[] blobs = new float[4*3];
+    public static Metaball[] getBalls() {
+        Metaball[] blobs = new Metaball[5];
 
         int width = 1000, height = 1000;
 
-        for (int i=0; i<blobs.length; i+=3) {
+        for (int i=0; i<blobs.length; i++) {
 
-            float x = (float) Math.random()*width;
-            float y = (float) Math.random()*height;
-            float r = (float) Math.random()*300 + 60;
+            Metaball ball = new Metaball();
+            ball.x = (float) Math.random()*width;
+            ball.y = (float) Math.random()*height;
+            ball.radius = (float) Math.random()*300 + 60;
 
-            blobs[i] = MathUtils.clamp(x, r, width-r);
-            blobs[i+1] = MathUtils.clamp(y, r, height-r);
-            blobs[i+2] = r;
+            blobs[i] = ball;
         }
 
         return blobs;
     }
 
-    private static boolean getValueAt(int x, int y, float[] balls) {
+    private static boolean getValueAt(float x, float y, Metaball[] balls) {
         float value = 0;
         float g = 3;
         int threshold = 5;
 
-        for (int i=0; i<balls.length; i+=3) {
-            float bx = balls[i];
-            float by = balls[i+1];
-            float br = balls[i+2];
+        for (Metaball b : balls) {
+            //Try to speed it up a bit by ignoring far away balls (TODO replace with bsp tree)
+//            if ((b.x-x)*(b.x-x) + (b.y-y)*(b.y-y) > (b.radius + 1000)*(b.radius + 1000)) continue;
 
-            if ((bx-x)*(bx-x) + (by-y)*(by-y) > (br + 1000)*(br + 1000)) continue;
-
-            value += Math.pow(br, g) / Math.pow(Math.sqrt((bx - x)*(bx-x) + (by-y)*(by-y)), g);
+            value += Math.pow(b.radius, g) / Math.pow(Math.sqrt((b.x - x)*(b.x-x) + (b.y-y)*(b.y-y)), g);
             if (value > threshold) break;
         }
 

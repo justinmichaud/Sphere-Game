@@ -8,6 +8,7 @@ import com.badlogic.gdx.math.Vector3;
 import java.util.ArrayList;
 
 import me.justin.culminating.Input;
+import me.justin.culminating.terrain.Metaball;
 
 /**
  * Created by justin on 25/04/15.
@@ -65,7 +66,7 @@ public class EditorApplication extends ApplicationAdapter {
             renderTerrain();
         }
         else if (state == State.ENTITY) {
-
+            renderEntities();
         }
 
         frames++;
@@ -107,6 +108,10 @@ public class EditorApplication extends ApplicationAdapter {
         }
 
         level.renderMetaballs();
+    }
+
+    private void renderEntities() {
+        level.renderEntities();
     }
 
     public void addStateChangeListener(StateChangeListener listener) {

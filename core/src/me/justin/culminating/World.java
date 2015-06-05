@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import me.justin.culminating.entities.Entity;
 import me.justin.culminating.entities.GameObject;
 import me.justin.culminating.entities.Player;
+import me.justin.culminating.terrain.Metaball;
 import me.justin.culminating.terrain.TerrainSection;
 import me.justin.culminating.terrain.TerrainSectionOneWayGravity;
 import me.justin.culminating.terrain.TerrainSectionPath;
@@ -57,13 +58,14 @@ public class World {
         gameObjects.add(player);
 
         float g = 3;
-        float[] balls = TerrainUtils.getBalls();
+        Metaball[] balls = TerrainUtils.getBalls();
 
         int width = 5000, height = 5000;
-        boolean[][] field = TerrainUtils.generateScalarField(balls, 0, 0, width, height);
+        float scale = 0.1f;
+        boolean[][] field = TerrainUtils.generateScalarField(balls, 0, 0, width, height, scale);
         System.out.println("Done generating blobs & scalar field");
 
-        ArrayList<TerrainSection> ts = TerrainUtils.loadFromMetaballs(this, field, terrainScale, 0.1f);
+        ArrayList<TerrainSection> ts = TerrainUtils.loadFromMetaballs(this, field, terrainScale, 1f/scale);
         for (TerrainSection t : ts) {
             terrain.add(t);
             gameObjects.add(t);

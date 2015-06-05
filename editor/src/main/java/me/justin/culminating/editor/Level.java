@@ -4,11 +4,12 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.math.Circle;
 
 import java.util.ArrayList;
 
+import me.justin.culminating.TerrainUtils;
 import me.justin.culminating.entities.GameObject;
+import me.justin.culminating.terrain.Metaball;
 
 /**
  * Created by justin on 02/05/15.
@@ -49,4 +50,8 @@ public class Level {
         shapeRenderer.end();
     }
 
+    public void renderEntities() {
+        camera.update();
+
+    }
 }

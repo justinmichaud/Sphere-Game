@@ -1,4 +1,4 @@
-package me.justin.culminating.editor;
+package me.justin.culminating.terrain;
 
 /**
  * Created by justin on 02/05/15.
